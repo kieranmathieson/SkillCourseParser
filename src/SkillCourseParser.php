@@ -192,6 +192,8 @@ class SkillCourseParser {
       ->setSymbol('quote_single_close', "'")
       ->setSymbol('quote_double_open', '"')
       ->setSymbol('quote_double_close', '"')
+      ->setDimensionlessImages()
+      ->setRestricted(FALSE)
     ;
     $result = $textileParser->parse($source);
     return $result;
