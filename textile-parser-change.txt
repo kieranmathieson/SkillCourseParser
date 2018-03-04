@@ -1,0 +1,4 @@
+Parser.php, 2032 should be:
+
+$style = [];
+
