@@ -254,7 +254,7 @@ Dogs are the *best*!
 
   public function textile2() {
     $source = "
-  h1. This thing
+  h1{border:5px solid red;}. This thing
       
   exercise.
     name: exercise_doom
