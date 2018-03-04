@@ -1,0 +1,70 @@
+hello.hello:
+  path: '/hello'
+  defaults:
+    _controller: '\Drupal\hello\Controller\HelloController::hello'
+    _title: 'Our first route'
+  requirements:
+    _permission: 'access content'
+hello.el1:
+  path: '/el1'
+  defaults:
+    _controller: '\Drupal\hello\Controller\HelloController::el1'
+    _title: 'Expression language 1'
+  requirements:
+    _permission: 'access content'
+hello.cebe1:
+  path: '/cebe1'
+  defaults:
+    _controller: '\Drupal\hello\Controller\HelloController::cebe1'
+    _title: 'Cebe MD'
+  requirements:
+    _permission: 'access content'
+hello.cebe2:
+  path: '/cebe2'
+  defaults:
+    _controller: '\Drupal\hello\Controller\HelloController::cebe2'
+    _title: 'Cebe MD 2'
+  requirements:
+    _permission: 'access content'
+hello.rst1:
+  path: '/rst1'
+  defaults:
+    _controller: '\Drupal\hello\Controller\HelloController::rst1'
+    _title: 'reStructuredText 1'
+  requirements:
+    _permission: 'access content'
+hello.textile1:
+  path: '/textile1'
+  defaults:
+    _controller: '\Drupal\hello\Controller\HelloController::textile1'
+    _title: 'Textile 1'
+  requirements:
+    _permission: 'access content'
+hello.textile2:
+  path: '/textile2'
+  defaults:
+    _controller: '\Drupal\hello\Controller\HelloController::textile2'
+    _title: 'Textile 2'
+  requirements:
+    _permission: 'access content'
+hello.dog_form:
+    path: '/admin/config/dog-configuration'
+    defaults:
+        _form: '\Drupal\hello\Form\DogForm'
+        _title: 'Dog configuration'
+    requirements:
+        _permission: 'administer site configuration'
+hello.dog:
+  path: '/dog/{name}'
+  defaults:
+    _controller: '\Drupal\hello\Controller\HelloController::helloDog'
+    _title: 'Hello dog!'
+  requirements:
+    _permission: 'access content'
+hello.rosie:
+  path: '/rosie'
+  defaults:
+    _controller: '\Drupal\hello\Controller\HelloController::helloRosie'
+  requirements:
+    _permission: 'access content'
+

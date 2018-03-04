@@ -1,0 +1,14 @@
+{
+  "name": "drupal/hello",
+  "type": "drupal-module",
+  "description": "Hello world KRM",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/hello",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/hello",
+    "source": "http://cgit.drupalcode.org/hello"
+  },
+  "require": { }
+}

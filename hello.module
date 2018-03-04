@@ -1,0 +1,64 @@
+<?php
+
+/**
+ * @file
+ * Contains hello.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function hello_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the hello module.
+    case 'help.page.hello':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Hello world KRM') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function hello_theme() {
+  return [
+    'hello' => [
+      'render element' => 'children',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_install().
+ */
+function hello_install() {
+  
+}
+
+/**
+ * Implements hook_editor_js_settings_alter
+ */
+function hello_editor_js_settings_alter(array &$settings) {
+  if (empty($settings['editor']['formats']['dog'])) {
+    return;
+  }
+
+  $full_html = &$settings['editor']['formats']['dog'];
+  $full_html['editorSettings']['enterMode'] = 2;
+//  $full_html['editorSettings']['basicEntities'] = FALSE;
+  $full_html['editorSettings']['entities'] = FALSE;
+
+
+
+  foreach ($settings['editor']['formats'] as $name => $value) {
+    //$settings['editor']['formats'][$name]['editorSettings']['contentsLangDirection'] = 'rtl';
+  }
+}
+
+

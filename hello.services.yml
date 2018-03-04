@@ -1,0 +1,12 @@
+services:
+  hello.quote:
+    class: Drupal\hello\Quote
+    arguments: ['@config.factory']
+  hello.redirect_subscriber:
+    class: \Drupal\hello\EventSubscriber\HelloRedirectSubscriber
+    arguments: ['@current_user']
+    tags:
+      - {name: event_subscriber}
+  hello.skillcourseparser:
+    class: Drupal\hello\SkillCourseParser
+    arguments: ['@token']
