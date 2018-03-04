@@ -1,0 +1,42 @@
+h1. This thing
+
+This is some content to test the code.
+
+There are < 10 ducks today.
+
+For a line break, try @<br />@.
+
+For a hard space, try @&nbsp;@.
+
+exercise.
+    name: exercise_doom
+    rating: 4
+
+This is another paragraph
+with some stuff in it!!
+
+rosie.
+    test: '[current-user:uid] == 1'
+    yaps: 1
+
+    This is starting outer Rosie content.
+
+    exercise.
+      name: exercise [site:name]
+
+    rosie.
+      yaps: 3
+
+      This is inner Rosie content.
+
+    /rosie.
+
+    This is ending outer Rosie content.
+
+/rosie.
+
+
+exercise.
+    name: exercise_bandicoot
+
+Dogs are the *best*!
