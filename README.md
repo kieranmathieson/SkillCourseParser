@@ -4,5 +4,5 @@ parameters to custom tag code.
 Includes parameter that takes a boolean expression. Expression can use tokens, to, e.g., test
 data about the current user.
 
-Lets content authors add conditions to content. E.g., only show certain text to users
+Content authors can add conditions to content. E.g., only show certain text to users
 with certain characteristics.
