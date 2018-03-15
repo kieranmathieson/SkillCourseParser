@@ -10,5 +10,6 @@
     "issues": "https://www.drupal.org/project/issues/hello",
     "source": "http://cgit.drupalcode.org/hello"
   },
-  "require": { }
+  "require": {
+  }
 }
