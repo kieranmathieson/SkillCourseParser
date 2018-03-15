@@ -52,12 +52,12 @@ class SkillCourseParser {
   }
 
   protected function processExerciseTag($content, $options) {
-    $result = '<p>This is the exercise you\'re looking for: ' . $options['name'] . '.</p>';
+    $result = "\nThis is the exercise you're looking for: " . $options['name'] . ".\n\n";
     return $result;
   }
   protected function processRosieTag($content, $options) {
     $yaps = str_repeat('Yap ', $options['yaps']);
-    $result = "<p>*$yaps!*</p>\n\n" . $content . "<p>$yaps!</p>\n\n";
+    $result = "\n*$yaps!*\n\n" . $content . "$yaps!\n\n";
     return $result;
   }
   protected function parseCustomTags($source) {
@@ -94,6 +94,7 @@ class SkillCourseParser {
           $options = [];
           //Parse the options, if there are any.
           $optionChars = trim($optionChars);
+          $optionsParseErrorMessage = '';
           if (strlen($optionChars) > 0) {
             try {
               $options = Yaml::parse($optionChars);
@@ -115,7 +116,7 @@ class SkillCourseParser {
               $optionsParseErrorMessage =
                 "\n\np(" . self::OPTION_PARSING_ERROR_CLASS . '). '
                 . 'Error parsing options for ' . $tagType['tagName'] . ".\n\n"
-                . 'bc. ' . $optionChars . "";
+                . 'bc. ' . $optionChars . "\n\n";
             }
           } //End there are option chars.
           //Find the close tag, if there is one, and the content between end
@@ -197,7 +198,6 @@ class SkillCourseParser {
     ;
     $result = $textileParser->parse($source);
     return $result;
-
   }
 
 }
