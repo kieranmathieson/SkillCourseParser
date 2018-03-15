@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\editor\Entity\Editor;
 
 /**
  * Implements hook_help().
@@ -45,20 +46,26 @@ function hello_install() {
  * Implements hook_editor_js_settings_alter
  */
 function hello_editor_js_settings_alter(array &$settings) {
+  //Todo: make skillcourse a constant somewhere.
+  //Todo: create skillcourse format on install, and set it up.
   if (empty($settings['editor']['formats']['skillcourse'])) {
     return;
   }
-
-  $skillcourse = &$settings['editor']['formats']['skillcourse'];
-  $skillcourse['editorSettings']['enterMode'] = 2;
-//  $full_html['editorSettings']['basicEntities'] = FALSE;
-  $skillcourse['editorSettings']['entities'] = FALSE;
-
-
-
-  foreach ($settings['editor']['formats'] as $name => $value) {
-    //$settings['editor']['formats'][$name]['editorSettings']['contentsLangDirection'] = 'rtl';
-  }
+  $skillcourseSettings = &$settings['editor']['formats']['skillcourse']['editorSettings'];
+  //Use brs for enter key.
+  $skillcourseSettings['enterMode'] = 2;
+  //Don't encode entities?
+  $skillcourseSettings['entities'] = FALSE;
+  //Remove plugins that implement context menu.
+  //See https://www.drupal.org/project/ckeditor_browser_context_menu
+  $skillcourseSettings['removePlugins'] = 'contextmenu,tabletools,tableresize';
+  $skillcourseSettings['disableNativeSpellChecker'] = false;
 }
+
+function hello_ckeditor_css_alter(array &$css, Editor $editor) {
+  //Add CSS to change CKEditor to monospace font.
+  $css[] = drupal_get_path('module', 'hello') . '/css/ckeditor.css';
+}
+
 
 
