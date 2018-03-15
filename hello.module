@@ -45,14 +45,14 @@ function hello_install() {
  * Implements hook_editor_js_settings_alter
  */
 function hello_editor_js_settings_alter(array &$settings) {
-  if (empty($settings['editor']['formats']['dog'])) {
+  if (empty($settings['editor']['formats']['skillcourse'])) {
     return;
   }
 
-  $full_html = &$settings['editor']['formats']['dog'];
-  $full_html['editorSettings']['enterMode'] = 2;
+  $skillcourse = &$settings['editor']['formats']['skillcourse'];
+  $skillcourse['editorSettings']['enterMode'] = 2;
 //  $full_html['editorSettings']['basicEntities'] = FALSE;
-  $full_html['editorSettings']['entities'] = FALSE;
+  $skillcourse['editorSettings']['entities'] = FALSE;
 
 
 
