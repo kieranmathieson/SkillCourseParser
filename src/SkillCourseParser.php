@@ -31,6 +31,7 @@ class SkillCourseParser {
     $this->tokenService = $token;
     $this->addTagType('exercise', FALSE);
     $this->addTagType('rosie', TRUE);
+    $this->addTagType('warning', TRUE);
   }
 
   protected function addTagType($tagName, $hasCloseTag) {
@@ -58,6 +59,10 @@ class SkillCourseParser {
   protected function processRosieTag($content, $options) {
     $yaps = str_repeat('Yap ', $options['yaps']);
     $result = "\n*$yaps!*\n\n" . $content . "$yaps!\n\n";
+    return $result;
+  }
+  protected function processWarningTag($content, $options) {
+    $result = "\n\n<div class='warning'>" . $content . "</div>\n\n";
     return $result;
   }
   protected function parseCustomTags($source) {
