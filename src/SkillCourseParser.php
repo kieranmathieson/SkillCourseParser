@@ -71,8 +71,8 @@ class SkillCourseParser {
         $foundCustomTag = FALSE;
         $startChar = 0;
         $openTagText = $tagType['tagName'] . ".\n";
-        $tagPos = stripos($source, $openTagText, $startChar);
-        while ($tagPos !== FALSE) {
+        list($gotOne, $tagPos) = $this->findOpenTag($source, $openTagText, $startChar);
+        while ($gotOne) {
           //Found one.
           //Flag to continue processing after this tag, so nested tags are processed.
           $foundCustomTag = TRUE;
@@ -130,21 +130,27 @@ class SkillCourseParser {
             while ($openTagCount > 0) {
               //Find the tag, either opening or closing.
               $loc = stripos($source, $lookFor, $tagEndPoint);
-              //Is it an opening or closing tag? Check prior char.
+              //Get char prior to tag.
               $priorChar = substr($source, $loc - 1, 1);
-              $isEndTag = ($priorChar == '/');
-              //Change open tag count
-              if ($isEndTag) {
-                $openTagCount--;
-              }
-              else {
-                $openTagCount++;
-              }
-              //Remember where the tag started, in case need it to extract
-              //content when the loop ends.
-              $contentEndPos = $loc;
-              if ($isEndTag) {
-                $contentEndPos--;
+              //Get char prior to the prior char.
+              $priorCharPriorChar = substr($source, $loc - 2, 1);
+              //If the match isn't at the start of the line, it's not a tag.
+              if ( $priorChar === "\n" || ( $priorChar === "/" && $priorCharPriorChar === "\n" ) ) {
+                //Is it an opening or closing tag?
+                $isEndTag = ($priorChar == '/');
+                //Change open tag count
+                if ($isEndTag) {
+                  $openTagCount--;
+                }
+                else {
+                  $openTagCount++;
+                }
+                //Remember where the tag started, in case need it to extract
+                //content when the loop ends.
+                $contentEndPos = $loc;
+                if ($isEndTag) {
+                  $contentEndPos--;
+                }
               }
               //Move pointer past the tag just found.
               $tagEndPoint = $loc + strlen($lookFor);
@@ -169,13 +175,43 @@ class SkillCourseParser {
             $tagPos = FALSE;
           }
           else {
-            $tagPos = stripos($source, $openTagText, $startChar);
+            list($gotOne, $tagPos) = $this->findOpenTag($source, $openTagText, $startChar);
+//            $tagPos = stripos($source, $openTagText, $startChar);
           }
         } //End while there are more tags of $tagType.
-      } while ( $foundCustomTag );
+      } while ( $gotOne );
+//      } while ( $foundCustomTag );
     }
     return $source;
 
+  }
+
+  /**
+   * @param $textToSearch
+   * @param $openTagText
+   * @param $searchPosStart
+   */
+  protected function findOpenTag($textToSearch, $openTagText, $searchPosStart) {
+    $gotOne = false;
+    do {
+      $tagPos = stripos($textToSearch, $openTagText, $searchPosStart);
+      if ( $tagPos !== false) {
+        //Found something, but is it a tag, or random text?
+        //Get char prior to tag.
+        $priorChar = substr($textToSearch, $tagPos - 1, 1);
+        //Get char prior to the prior char.
+        $priorCharPriorChar = substr($textToSearch, $tagPos - 2, 1);
+        //If the match isn't at the start of the line, it's not a tag.
+        if ($priorChar === "\n" || ($priorChar === "/" && $priorCharPriorChar === "\n")) {
+          $gotOne = TRUE;
+        }
+        else {
+          //Not a tag. Move past the thing that was found.
+          $searchPosStart = $tagPos + strlen($openTagText);
+        }
+      }
+    } while ( ! $gotOne && $searchPosStart < strlen($textToSearch) );
+    return [$gotOne, $tagPos];
   }
 
   public function parse($source) {
