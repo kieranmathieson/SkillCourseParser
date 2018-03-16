@@ -41,8 +41,12 @@ class SkillCourseFilter extends FilterBase {
     $chocMessage = 'There is '
         . ($this->settings['there_is_chocolate'] ? '' : 'no ') . "chocolate.\n\n";
     $text = $chocMessage . $text;
-
-    $text = str_replace("<br />\n", "\n", $text);
+    $text = str_replace("<br />\n", "\n", $text, $count);
+//    //Var to count number of replacements made. Set by str_replace.
+//    $count = 0;
+//    do {
+//      $text = str_replace("<br />\n", "\n", $text, $count);
+//    } while ($count > 0);
     $text = str_replace("&nbsp;", ' ', $text);
     //Find image tags, replace with path to file.
     $text = preg_replace_callback(
@@ -98,14 +102,28 @@ class SkillCourseFilter extends FilterBase {
         //Find width attr in the img tag.
         preg_match("/width=(?:\'|\")(.*)(?:\'|\")/Ui", $fullMatch, $imgWidthMatches);
         if ( isset( $imgWidthMatches[1] ) ) {
+          //Add a unit if there isn't one.
+          $width = trim($imgWidthMatches[1]);
+          //Is the last character a digit?
+          if ( is_numeric(substr($width, -1)) ) {
+            //Add px.
+            $width .= 'px';
+          }
           //Append to $allStyles.
-          $allStyles .= 'width:' . $imgWidthMatches[1] . ';';
+          $allStyles .= 'width:' . $width . ';';
         }
         //Find height attr in the img tag.
         preg_match("/height=(?:\'|\")(.*)(?:\'|\")/Ui", $fullMatch, $imgHeightMatches);
         if ( isset( $imgHeightMatches[1] ) ) {
+          //Add a unit if there isn't one.
+          $height = trim($imgHeightMatches[1]);
+          //Is the last character a digit?
+          if ( is_numeric(substr($height, -1)) ) {
+            //Add px.
+            $height .= 'px';
+          }
           //Append to $allStyles.
-          $allStyles .= 'height:' . $imgHeightMatches[1] . ';';
+          $allStyles .= 'height:' . $height . ';';
         }
         //Build complete Textile tag.
         $completeTextileTag = '!';

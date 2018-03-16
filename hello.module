@@ -54,8 +54,15 @@ function hello_editor_js_settings_alter(array &$settings) {
   $skillcourseSettings = &$settings['editor']['formats']['skillcourse']['editorSettings'];
   //Use brs for enter key.
   $skillcourseSettings['enterMode'] = 2;
+  //Use brs for shift+enter key.
+  $skillcourseSettings['shiftEnterMode'] = 2;
+  //Tab key is four spaces.
+  $skillcourseSettings['tabSpaces'] = 4;
   //Don't encode entities?
   $skillcourseSettings['entities'] = FALSE;
+  //Force pasting to use plain text.
+  $skillcourseSettings['forcePasteAsPlainText'] = TRUE;
+
   //Remove plugins that implement context menu.
   //See https://www.drupal.org/project/ckeditor_browser_context_menu
   $skillcourseSettings['removePlugins'] = 'contextmenu,tabletools,tableresize';
