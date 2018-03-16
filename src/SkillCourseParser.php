@@ -4,6 +4,8 @@ namespace Drupal\hello;
 
 use Drupal\Core\Utility\Token;
 use Netcarver\Textile\Parser as TextileParser;
+use function PasswordCompat\binary\_strlen;
+use function PasswordCompat\binary\_substr;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
@@ -72,7 +74,7 @@ class SkillCourseParser {
     foreach ($this->tagTypes as $tagType) {
       //Keep processing $source, until don't find custom tag.
       //This is for nested tags.
-      do {
+//      do {
         $foundCustomTag = FALSE;
         $startChar = 0;
         $openTagText = $tagType['tagName'] . ".\n";
@@ -184,7 +186,7 @@ class SkillCourseParser {
 //            $tagPos = stripos($source, $openTagText, $startChar);
           }
         } //End while there are more tags of $tagType.
-      } while ( $gotOne );
+//      } while ( $gotOne );
 //      } while ( $foundCustomTag );
     }
     return $source;
@@ -192,31 +194,89 @@ class SkillCourseParser {
   }
 
   /**
-   * @param $textToSearch
-   * @param $openTagText
-   * @param $searchPosStart
+   * @param string $textToSearch
+   * @param string $tag
+   * @param integer $searchPosStart
+   *
+   * @return array
    */
-  protected function findOpenTag($textToSearch, $openTagText, $searchPosStart) {
+  protected function findOpenTag(string $textToSearch, string $tag, integer $searchPosStart) {
     $gotOne = false;
+    $openTagText = $tag . '.';
     do {
       $tagPos = stripos($textToSearch, $openTagText, $searchPosStart);
-      if ( $tagPos !== false) {
+      if ( $tagPos === false ) {
+        //Nothing found.
+        //Move searchPos to after end of textToSearch, so loop ends.
+        $searchPosStart = strlen($textToSearch);
+      }
+      else {
         //Found something, but is it a tag, or random text?
         //Get char prior to tag.
         $priorChar = substr($textToSearch, $tagPos - 1, 1);
         //Get char prior to the prior char.
         $priorCharPriorChar = substr($textToSearch, $tagPos - 2, 1);
-        //If the match isn't at the start of the line, it's not a tag.
-        if ($priorChar === "\n" || ($priorChar === "/" && $priorCharPriorChar === "\n")) {
+        //If the match is at the start of the line or content, it's a tag.
+        if (($tagPos === 0) || $priorChar === "\n" || ($priorChar === "/" && $priorCharPriorChar === "\n")) {
+          //Todo: add test to see if it's at the end of the line, too.
           $gotOne = TRUE;
         }
-        else {
-          //Not a tag. Move past the thing that was found.
+        if ( ! $gotOne) {
+          //Not a tag.
+          //Move the searchPos to after the text that was found.
           $searchPosStart = $tagPos + strlen($openTagText);
         }
       }
     } while ( ! $gotOne && $searchPosStart < strlen($textToSearch) );
     return [$gotOne, $tagPos];
+  }
+
+  /**
+   * Test whether tag text is on a line by itself. Nothing in front of it, and
+   * nothing or only spaces and/or tabs between the end of the tag, and EOL.
+   *
+   * @param string $textToSearch The content with the tag.
+   * @param string $openTagText The tag's opening text, e.g., "exercise.".
+   * @param int $tagPos Where the tag starts.
+   *
+   * @return bool True if the tag text is on a line by itself.
+   */
+  protected function isTagTextOnLineByItself(string $textToSearch, string $openTagText, integer $tagPos) {
+    //Get char prior to tag.
+    $priorChar = substr($textToSearch, $tagPos - 1, 1);
+    //Get char prior to the prior char.
+    $priorCharPriorChar = substr($textToSearch, $tagPos - 2, 1);
+    //If the match is at the start of the line or content, it could be a tag.
+    $tagStartLine =    $tagPos === 0
+                    || $priorChar === "\n"
+                    || $priorChar === "/" && $priorCharPriorChar === "\n";
+    if ( ! $tagStartLine ) {
+      //Matched text doesn't start line, so not a tag.
+      return false;
+    }
+    //Start looking after the tag, for non-whitespace chars.
+    $searchPoint = $tagPos + strlen($openTagText);
+    $foundNonWhiteSpaceChar = false;
+    $foundEol = false;
+    $contentLength = strlen($textToSearch);
+    while (
+           ! $foundNonWhiteSpaceChar
+        && ! $foundEol
+        && $searchPoint < $contentLength ) {
+      $charToTest = substr($textToSearch, $searchPoint, 1);
+      if ( $charToTest === "\n" || $searchPoint >= $contentLength ) {
+        $foundEol = true;
+      }
+      elseif ( $charToTest === ' ' || $charToTest === "\t" ) {
+        //Whitespace - move to next char.
+        $searchPoint ++;
+      }
+      else {
+        $foundNonWhiteSpaceChar = true;
+      }
+    }
+    //If didn't find non-whitespace chars, tag text has nothing between it and EOL.
+    return ! $foundNonWhiteSpaceChar;
   }
 
   public function parse($source) {
