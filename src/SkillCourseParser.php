@@ -2,13 +2,14 @@
 
 namespace Drupal\hello;
 
+use Drupal\hello\Exception\SkillParserException;
 use Drupal\Core\Utility\Token;
 use Netcarver\Textile\Parser as TextileParser;
-use function PasswordCompat\binary\_strlen;
-use function PasswordCompat\binary\_substr;
 use Symfony\Component\Config\Definition\Exception\Exception;
+use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
+use Symfony\Component\ExpressionLanguage\SyntaxError;
 
 /**
  * Class SkillCourseTags.
@@ -40,7 +41,14 @@ class SkillCourseParser {
     $this->tagTypes[] = ['tagName'=>$tagName, 'hasCloseTag'=>$hasCloseTag];
   }
 
-  protected function trimWhitespace($source) {
+  /**
+   * Remove leading and trailing whitespace from every line in a string.
+   * Lines are defined by EOLs.
+   * @param string $source String with lines to trim.
+   *
+   * @return string Source with whitespace removed.
+   */
+  protected function trimWhitespace(string $source) {
     //Remove CRs.
     $source = str_replace("\r", '', $source);
     //Explode into array, one element for each line.
@@ -103,27 +111,26 @@ class SkillCourseParser {
           $optionChars = trim($optionChars);
           $optionsParseErrorMessage = '';
           if (strlen($optionChars) > 0) {
-            try {
-              $options = Yaml::parse($optionChars);
-              //Process tokens.
-              foreach($options as $indx=>$val) {
-                $newVal = $this->tokenService->replace($val);
-                //Is this a test?
-                if ( strtolower($indx) === 'test' ) {
-                  $language = new ExpressionLanguage();
-                  $context = [];
-                  $result = $language->evaluate($newVal, $context);
-                  if ( ! $result ) {
-                    $failedTestOption = TRUE;
-                  }
+            //Try parsing tag params as YAML.
+            list($options, $optionsParseErrorMessage) = $this->parseParams(
+              $optionChars
+            );
+            //Is there a test?
+            //TOdo: move to class constant
+            if (!strlen($optionsParseErrorMessage) == 0 && isset($options['test'])) {
+              $language = new ExpressionLanguage();
+              $context = [];
+              $expToEval = $options['test'];
+              try {
+                //Eval the expression.
+                $result = $language->evaluate($expToEval, $context);
+                //Was is truthy?
+                if ( ! $result ) {
+                  $failedTestOption = TRUE;
                 }
-                $options[$indx] = $newVal;
+              } catch (SyntaxError $e) {
+                $optionsParseErrorMessage = 'Error in expression: ' . $expToEval;
               }
-            } catch (Exception $e) {
-              $optionsParseErrorMessage =
-                "\n\np(" . self::OPTION_PARSING_ERROR_CLASS . '). '
-                . 'Error parsing options for ' . $tagType['tagName'] . ".\n\n"
-                . 'bc. ' . $optionChars . "\n\n";
             }
           } //End there are option chars.
           //Find the close tag, if there is one, and the content between end
@@ -194,13 +201,41 @@ class SkillCourseParser {
   }
 
   /**
-   * @param string $textToSearch
-   * @param string $tag
-   * @param integer $searchPosStart
+   * Parse tag params as YAML. Substitute tokens.
+   * @param string $optionChars Params as string to parse.
    *
-   * @return array
+   * @return array [0](array): options. [1](string): error message
    */
-  protected function findOpenTag(string $textToSearch, string $tag, integer $searchPosStart) {
+  protected function parseParams(string $optionChars){
+    //Try YAML parsing.
+    try {
+      $options = Yaml::parse($optionChars);
+    } catch (ParseException $e) {
+      //Make a message to be shown on the content output page.
+      $message = 'Tag parameter parse error: ' . $e->getMessage();
+      return [ [], $message ];
+    }
+    //Replace tokens.
+    foreach($options as $indx=>$val) {
+      //Todo: what happens for invalid token?
+      $newVal = $this->tokenService->replace($val);
+      $options[$indx] = $newVal;
+    }
+    return [ $optionChars, '' ];
+  }
+
+
+
+  /**
+   * Find the next open tag, is there is one.
+   *
+   * @param string $textToSearch The text to search.
+   * @param string $tag The text of the tag, e.g., "exercise"
+   * @param int $searchPosStart Where to start the search.
+   *
+   * @return array [0] (boolean): whether found it, [1] (int) if found, where.
+   */
+  protected function findOpenTag(string $textToSearch, string $tag, int $searchPosStart) {
     $gotOne = false;
     $openTagText = $tag . '.';
     do {
@@ -212,13 +247,7 @@ class SkillCourseParser {
       }
       else {
         //Found something, but is it a tag, or random text?
-        //Get char prior to tag.
-        $priorChar = substr($textToSearch, $tagPos - 1, 1);
-        //Get char prior to the prior char.
-        $priorCharPriorChar = substr($textToSearch, $tagPos - 2, 1);
-        //If the match is at the start of the line or content, it's a tag.
-        if (($tagPos === 0) || $priorChar === "\n" || ($priorChar === "/" && $priorCharPriorChar === "\n")) {
-          //Todo: add test to see if it's at the end of the line, too.
+        if ( $this->isTagTextOnLineByItself($textToSearch, $tag, $tagPos) ) {
           $gotOne = TRUE;
         }
         if ( ! $gotOne) {
@@ -236,26 +265,30 @@ class SkillCourseParser {
    * nothing or only spaces and/or tabs between the end of the tag, and EOL.
    *
    * @param string $textToSearch The content with the tag.
-   * @param string $openTagText The tag's opening text, e.g., "exercise.".
+   * @param string $tag The tag's opening text, e.g., "exercise.".
    * @param int $tagPos Where the tag starts.
    *
    * @return bool True if the tag text is on a line by itself.
    */
-  protected function isTagTextOnLineByItself(string $textToSearch, string $openTagText, integer $tagPos) {
+  protected function isTagTextOnLineByItself(string $textToSearch, string $tag, int $tagPos) {
+    //$tag . '.' should be at $tagPos.
+    if ( substr($textToSearch, $tagPos, strlen($tag)+1 ) !== $tag . '.' ) {
+      throw new SkillParserException('Tag not in expected position. tag:' . $tag . ', pos:' . $tagPos);
+    }
     //Get char prior to tag.
     $priorChar = substr($textToSearch, $tagPos - 1, 1);
     //Get char prior to the prior char.
     $priorCharPriorChar = substr($textToSearch, $tagPos - 2, 1);
     //If the match is at the start of the line or content, it could be a tag.
-    $tagStartLine =    $tagPos === 0
+    $tagStartsLine =    $tagPos === 0
                     || $priorChar === "\n"
                     || $priorChar === "/" && $priorCharPriorChar === "\n";
-    if ( ! $tagStartLine ) {
+    if ( ! $tagStartsLine ) {
       //Matched text doesn't start line, so not a tag.
       return false;
     }
     //Start looking after the tag, for non-whitespace chars.
-    $searchPoint = $tagPos + strlen($openTagText);
+    $searchPoint = $tagPos + strlen($tag) + 1; //+1 for . at tag end.
     $foundNonWhiteSpaceChar = false;
     $foundEol = false;
     $contentLength = strlen($textToSearch);
