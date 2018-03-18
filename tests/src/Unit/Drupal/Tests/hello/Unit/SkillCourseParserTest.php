@@ -30,6 +30,14 @@ class TestableParser extends SkillCourseParser {
     return parent::trimWhitespace($source);
   }
 
+  public function parseParams(string $optionChars) {
+    return parent::parseParams($optionChars);
+  }
+
+  public function parseCustomTags($source) {
+    return parent::parseCustomTags($source);
+  }
+
 }
 
 /**
@@ -38,30 +46,19 @@ class TestableParser extends SkillCourseParser {
  * @group hello
  */
 class SkillCourseParserTest extends UnitTestCase  {
-  public function testTrueIsTrue()  {
-    $foo = true;
-    $this->assertTrue($foo);
-  }
 
-  public function testMockTokenService() {
+  public function makeTestableParser() {
     $tokenMock = $this->getMockBuilder('Drupal\Core\Utility\Token')
       ->disableOriginalConstructor()
       ->getMock();
-    $parser = new TestableParser($tokenMock);
-    $foo = true;
-    $this->assertTrue($foo);
-  }
-
-  public function makeParserWithOpenTag() {
-    $tokenMock = $this->getMockBuilder('Drupal\Core\Utility\Token')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $tokenMock->method('replace')
+      ->will($this->returnArgument(0));
     $parser = new TestableParser($tokenMock);
     return $parser;
   }
 
   public function testIsTagTextOnLineByItself1() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $textToSearch = "Find\n\nhere.\n\nThe end\n";
     $openTagText = 'here';
     $tagPos = 6;
@@ -70,7 +67,7 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testIsTagTextOnLineByItself2() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $textToSearch = "Find\n\nhere.\nThe end\n";
     $openTagText = 'here';
     $tagPos = 6;
@@ -79,7 +76,7 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testIsTagTextOnLineByItself3() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $textToSearch = "Find\n\nhere.    \nThe end\n";
     $openTagText = 'here';
     $tagPos = 6;
@@ -88,7 +85,7 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testIsTagTextOnLineByItself4() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $textToSearch = "Find\n\nis here.\n\nThe end\n";
     $openTagText = 'here';
     $tagPos = 9;
@@ -97,7 +94,7 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testIsTagTextOnLineByItself5() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $textToSearch = "Find\n\nhere.";
     $openTagText = 'here';
     $tagPos = 6;
@@ -106,7 +103,7 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testIsTagTextOnLineByItself6() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $textToSearch = "Find\n\nhere. ";
     $openTagText = 'here';
     $tagPos = 6;
@@ -115,7 +112,7 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testIsTagTextOnLineByItself7() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $textToSearch = "Find\n\nhere. Aye!";
     $openTagText = 'here';
     $tagPos = 6;
@@ -124,7 +121,7 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testIsTagTextOnLineByItself8() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $textToSearch = "Find\n\nhere. Aye!";
     $openTagText = 'here';
     $tagPos = 3; //Wrong.
@@ -139,7 +136,7 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testIsTagTextOnLineByItself9() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $textToSearch = "Find\n\nhere. Aye!";
     $openTagText = 'dog'; //Wrong.
     $tagPos = 6;
@@ -155,7 +152,7 @@ class SkillCourseParserTest extends UnitTestCase  {
 
 
   public function testFindOpenTag1() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $source = "Find\n\nhere.\n\nThe end\n";
     $tag = 'here';
     $startChar = 0;
@@ -164,7 +161,7 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testFindOpenTag2() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $source = "Find\n\nHere is the thing.\n\nThe end\n";
     $tag = 'here';
     $startChar = 0;
@@ -173,7 +170,7 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testFindOpenTag3() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $source = "Find\n\nhere.\n\nThe end\n";
     $tag = 'here';
     $startChar = 0;
@@ -183,7 +180,7 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testFindOpenTag4() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $source = "Find\n\nHere is the here.\n\nThe end\n";
     $tag = 'here';
     $startChar = 0;
@@ -192,7 +189,7 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testFindOpenTag5() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $source = "Find\n\nHere is the here.\n\nhere.\n\nThe end\n";
     $tag = 'here';
     $startChar = 0;
@@ -201,7 +198,7 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testFindOpenTag6() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $source = "Find\n\nHere is the here.\n\nhere.\n\nThe end\n";
     $tag = 'here';
     $startChar = 0;
@@ -211,7 +208,7 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testFindOpenTag7() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $source = "here.\n\nFind\n\nHere is the here.\n\nhere.\n\nThe end\n";
     $tag = 'here';
     $startChar = 0;
@@ -221,7 +218,7 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testFindOpenTag8() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $source = "Find\n\nhere.\n\nThe end\n";
     $tag = 'here';
     $startChar = 10;
@@ -230,7 +227,7 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testFindOpenTag9() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $source = "Find\n\nhere.";
     $tag = 'here';
     $startChar = 2;
@@ -240,7 +237,7 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testFindOpenTag10() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $source = "here.\n\nFind\n\nhere.";
     $tag = 'here';
     $startChar = 0;
@@ -250,7 +247,7 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testFindOpenTag11() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $source = "Find\n\nhere.   \n\nThe end\n";
     $tag = 'here';
     $startChar = 0;
@@ -260,7 +257,7 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testFindOpenTag12() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $source = "Find\n\nhere.   X\n\nThe end\n";
     $tag = 'here';
     $startChar = 0;
@@ -269,7 +266,7 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testFindOpenTag13() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $source = "Find\n\nhere.   ";
     $tag = 'here';
     $startChar = 0;
@@ -279,12 +276,157 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
   public function testStripWhitespace1() {
-    $parser = $this->makeParserWithOpenTag();
+    $parser = $this->makeTestableParser();
     $source = " Find\n\n here.   ";
     $expected = "Find\n\nhere.";
     $result = $parser->trimWhitespace($source);
-    $this->assertEquals($expected, $result, 'Tag should be found.');
+    $this->assertEquals($expected, $result, 'Whitespace stipped successfully.');
 
   }
+
+  public function testStripWhitespace2() {
+    $parser = $this->makeTestableParser();
+    $source = " Find\n\n here.   \n    dog\n  \n  dog   \n";
+    $expected = "Find\n\nhere.\ndog\n\ndog\n";
+    $result = $parser->trimWhitespace($source);
+    $this->assertEquals($expected, $result, 'Whitespace stipped successfully.');
+
+  }
+
+  public function testParamsParse1() {
+    $parser = $this->makeTestableParser();
+    $source = "t1: 3";
+    list($params, $parseError) = $parser->parseParams($source);
+    $this->assertEquals(3, $params['t1'], 'Param parsed.');
+    $this->assertEquals('', $parseError, 'No param parse error.');
+  }
+
+  public function testParamsParse2() {
+    $parser = $this->makeTestableParser();
+    //Missing required space.
+    $source = "t1:3";
+    list($params, $parseError) = $parser->parseParams($source);
+    $this->assertEquals([], $params, 'Param not parsed: space missing.');
+    $this->assertTrue(stripos($parseError, 'required spaces') !== false, 'Param parse error message.');
+  }
+
+  public function testParamsParse3() {
+    $parser = $this->makeTestableParser();
+    $source = "t1: 3\nt2: 4";
+    list($params, $parseError) = $parser->parseParams($source);
+    $this->assertEquals(3, $params['t1'], 'Param 1 parsed.');
+    $this->assertEquals(4, $params['t2'], 'Param 2 parsed.');
+    $this->assertEquals('', $parseError, 'No param parse error.');
+  }
+
+  public function testParamsParse4() {
+    $parser = $this->makeTestableParser();
+    $source = "t1: 3\nt2: 4\nanimal: duck\n";
+    list($params, $parseError) = $parser->parseParams($source);
+    $this->assertEquals(3, $params['t1'], 'Param 1 parsed.');
+    $this->assertEquals(4, $params['t2'], 'Param 2 parsed.');
+    $this->assertEquals('duck', $params['animal'], 'Param 3 parsed.');
+    $this->assertEquals('', $parseError, 'No param parse error.');
+  }
+
+  public function testParamsParse5() {
+    $parser = $this->makeTestableParser();
+    $source = "t1: 3\nt2: 4\nanimal: duck goose\n";
+    list($params, $parseError) = $parser->parseParams($source);
+    $this->assertEquals(3, $params['t1'], 'Param 1 parsed.');
+    $this->assertEquals(4, $params['t2'], 'Param 2 parsed.');
+    $this->assertEquals('duck goose', $params['animal'], 'Param 3 parsed.');
+    $this->assertEquals('', $parseError, 'No param parse error.');
+  }
+
+  public function testParamsParse6() {
+    $parser = $this->makeTestableParser();
+    $source = "t1: 3\nt2: 4\nanimal: 'duck goose'\n";
+    list($params, $parseError) = $parser->parseParams($source);
+    $this->assertEquals(3, $params['t1'], 'Param 1 parsed.');
+    $this->assertEquals(4, $params['t2'], 'Param 2 parsed.');
+    $this->assertEquals('duck goose', $params['animal'], 'Param 3 parsed.');
+    $this->assertEquals('', $parseError, 'No param parse error.');
+  }
+
+  public function testParamsParse7() {
+    $parser = $this->makeTestableParser();
+    //Unclosed '.
+    $source = "t1: 3\nt2: 4\nanimal: 'duck goose\n";
+    list($params, $parseError) = $parser->parseParams($source);
+    $this->assertEquals([], $params, 'Param parse failed.');
+    $this->assertTrue(stripos($parseError, 'malformed') !== FALSE, 'Params malformed.');
+  }
+
+  /**
+   * Indented params, incorrect.
+   */
+  public function testParamsParse8() {
+    $parser = $this->makeTestableParser();
+    $source = "t1: 3\n  t2: 4\n  animal: 'duck goose'\n";
+    list($params, $parseError) = $parser->parseParams($source);
+    $this->assertEquals([], $params, 'Param parse failed.');
+    $this->assertTrue(strlen($parseError) > 0, 'Params malformed.');
+  }
+
+  public function testParamsParse9() {
+    $parser = $this->makeTestableParser();
+    $source = "t1:\n  t2: 4\n  animal: 'duck goose'\n";
+    list($params, $parseError) = $parser->parseParams($source);
+    $this->assertEquals(4, $params['t1']['t2'], 'Param parse nested.');
+    $this->assertEquals('duck goose', $params['t1']['animal'], 'Param parse nested.');
+    $this->assertTrue(strlen($parseError) === 0, 'Params OK.');
+  }
+
+  /**
+   * Include test expression, valid syntax.
+   */
+  public function testParamsParse10() {
+    $parser = $this->makeTestableParser();
+    $source = "t1:\n  t2: 4\n  animal: 'duck goose'\n  test: '2+3>1'";
+    list($params, $parseError) = $parser->parseParams($source);
+    $this->assertEquals(4, $params['t1']['t2'], 'Param parse nested.');
+    $this->assertEquals('duck goose', $params['t1']['animal'], 'Param parse nested.');
+    $this->assertTrue(strlen($parseError) === 0, 'Params OK.');
+  }
+
+    /**
+     * Include test expression, missing 's.
+     */
+  public function testParamsParse11() {
+    $parser = $this->makeTestableParser();
+    $source = "t1:\n  t2: 4\n  animal: 'duck goose'\n  test: 2+3>1";
+    list($params, $parseError) = $parser->parseParams($source);
+    $this->assertEquals(4, $params['t1']['t2'], 'Param parse nested.');
+    $this->assertEquals('duck goose', $params['t1']['animal'], 'Param parse nested.');
+    $this->assertEquals('2+3>1', $params['t1']['test'], 'Param parse nested.');
+    $this->assertTrue(strlen($parseError) === 0, 'Params OK.');
+  }
+
+  /**
+   * Include test expression, missing 's.
+   */
+  public function testParamsParse12() {
+    $parser = $this->makeTestableParser();
+    $source = "t1:\n  t2: 4\n  animal: 'duck goose'\n  test: 2 + 3 > 1";
+    list($params, $parseError) = $parser->parseParams($source);
+    $this->assertEquals(4, $params['t1']['t2'], 'Param parse nested.');
+    $this->assertEquals('duck goose', $params['t1']['animal'], 'Param parse nested.');
+    $this->assertEquals('2 + 3 > 1', $params['t1']['test'], 'Param parse nested.');
+    $this->assertTrue(strlen($parseError) === 0, 'Params OK.');
+  }
+
+  public function testParseCustom1() {
+    $parser = $this->makeTestableParser();
+    $source = "fake1.\n\nDog\n\n/fake1.\n";
+    $result = $parser->parseCustomTags($source);
+
+
+//    $this->assertEquals(4, $params['t1']['t2'], 'Param parse nested.');
+//    $this->assertEquals('duck goose', $params['t1']['animal'], 'Param parse nested.');
+//    $this->assertEquals('2 + 3 > 1', $params['t1']['test'], 'Param parse nested.');
+    $this->assertTrue(strlen($result) > 0, 'Tag OK.');
+  }
+
 
 }
