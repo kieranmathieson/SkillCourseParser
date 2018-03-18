@@ -35,6 +35,7 @@ class SkillCourseParser {
     $this->addTagType('exercise', FALSE);
     $this->addTagType('rosie', TRUE);
     $this->addTagType('warning', TRUE);
+    $this->addTagType('fake1', TRUE);
   }
 
   protected function addTagType($tagName, $hasCloseTag) {
@@ -62,6 +63,10 @@ class SkillCourseParser {
     return $source;
   }
 
+  protected function processFake1Tag($content, $options) {
+    $result = "\nFake " . $content . "Fake\n\n";
+    return $result;
+  }
   protected function processExerciseTag($content, $options) {
     $result = "\nThis is the exercise you're looking for: " . $options['name'] . ".\n\n";
     return $result;
@@ -85,8 +90,9 @@ class SkillCourseParser {
 //      do {
         $foundCustomTag = FALSE;
         $startChar = 0;
-        $openTagText = $tagType['tagName'] . ".\n";
-        list($gotOne, $tagPos) = $this->findOpenTag($source, $openTagText, $startChar);
+//        $openTagText = $tagType['tagName'] . ".\n";
+        $openTagText = $tagType['tagName'] . ".";
+        list($gotOne, $tagPos) = $this->findOpenTag($source, $tagType['tagName'], $startChar);
         while ($gotOne) {
           //Found one.
           //Flag to continue processing after this tag, so nested tags are processed.
@@ -144,13 +150,15 @@ class SkillCourseParser {
             while ($openTagCount > 0) {
               //Find the tag, either opening or closing.
               $loc = stripos($source, $lookFor, $tagEndPoint);
-              //Get char prior to tag.
-              $priorChar = substr($source, $loc - 1, 1);
-              //Get char prior to the prior char.
-              $priorCharPriorChar = substr($source, $loc - 2, 1);
-              //If the match isn't at the start of the line, it's not a tag.
-              if ( $priorChar === "\n" || ( $priorChar === "/" && $priorCharPriorChar === "\n" ) ) {
+//              //Get char prior to tag.
+//              $priorChar = substr($source, $loc - 1, 1);
+//              //Get char prior to the prior char.
+//              $priorCharPriorChar = substr($source, $loc - 2, 1);
+//              //If the match isn't at the start of the line, it's not a tag.
+//              if ( $priorChar === "\n" || ( $priorChar === "/" && $priorCharPriorChar === "\n" ) ) {
+              if ( $this->isTagTextOnLineByItself($source, $tagType['tagName'], $loc) ) {
                 //Is it an opening or closing tag?
+                $priorChar = substr($source, $loc - 1, 1);
                 $isEndTag = ($priorChar == '/');
                 //Change open tag count
                 if ($isEndTag) {
@@ -215,13 +223,18 @@ class SkillCourseParser {
       $message = 'Tag parameter parse error: ' . $e->getMessage();
       return [ [], $message ];
     }
+    if ( is_string($options) ) {
+      //Make a message to be shown on the content output page.
+      $message = "Tag parameters don't parse. Check for required spaces.";
+      return [ [], $message ];
+    }
     //Replace tokens.
     foreach($options as $indx=>$val) {
       //Todo: what happens for invalid token?
       $newVal = $this->tokenService->replace($val);
       $options[$indx] = $newVal;
     }
-    return [ $optionChars, '' ];
+    return [ $options, '' ];
   }
 
 
