@@ -5,7 +5,6 @@ namespace Drupal\hello;
 use Drupal\hello\Exception\SkillParserException;
 use Drupal\Core\Utility\Token;
 use Netcarver\Textile\Parser as TextileParser;
-use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
@@ -17,6 +16,8 @@ use Symfony\Component\ExpressionLanguage\SyntaxError;
 class SkillCourseParser {
 
   const OPTION_PARSING_ERROR_CLASS = 'option-parsing-error';
+
+  const CONDITION_TEST_PARAM_NAME = 'test';
 
   protected $tagTypes = [];
 
@@ -74,7 +75,7 @@ class SkillCourseParser {
     return $result;
   }
   protected function processExerciseTag($content, $options) {
-    $result = "\nThis is the exercise you're looking for: " . $options['name'] . ".\n\n";
+    $result = "\nThis is the exercise: " . $options['name'] . ".\n\n";
     return $result;
   }
   protected function processRosieTag($content, $options) {
@@ -86,28 +87,37 @@ class SkillCourseParser {
     $result = "\n\n<div class='warning'>" . $content . "</div>\n\n";
     return $result;
   }
-  protected function parseCustomTags($source) {
+
+  /**
+   * Parse custom tags.
+   * @param $source
+   * @return string
+   */
+  protected function parseCustomTags(string $source) {
     //Add LF to top of source, in case custom tag is first.
     $source = "\n" . $source;
     //Run through the custom tags.
     foreach ($this->tagTypes as $tagType) {
       //Keep processing $source, until don't find custom tag.
       //This is for nested tags.
-//      do {
         $foundCustomTag = FALSE;
         $startChar = 0;
-//        $openTagText = $tagType['tagName'] . ".\n";
         $openTagText = $tagType['tagName'] . ".";
-        list($gotOne, $tagPos) = $this->findOpenTag($source, $tagType['tagName'], $startChar);
+        list($gotOne, $tagPos) = $this->findOpenTag(
+          $source, $tagType['tagName'], $startChar
+        );
         while ($gotOne) {
           //Found one.
-          //Flag to continue processing after this tag, so nested tags are processed.
+          //Flag to continue processing after this tag, so nested tags
+          //are processed.
           $foundCustomTag = TRUE;
-          //Flag to show whether there was a test option, and the tag failed the test.
+          //Flag to show whether there was a test option, and the tag
+          //failed the test.
           $failedTestOption = FALSE;
           //Error message for YAML parsing of options, if it happens.
           $optionsParseErrorMessage = '';
-          //Get its options. YAML on the following lines until there's an MT line.
+          //Get tag's options. YAML on the following lines until there's
+          // an MT line.
           //Look from the end of the tag until find two LFs in a row - MT line.
           //Accumulate chars until find it.
           $tagEndPoint = $tagPos + strlen($openTagText);
@@ -127,16 +137,17 @@ class SkillCourseParser {
             list($options, $optionsParseErrorMessage) = $this->parseParams(
               $optionChars
             );
-            //Is there a test?
-            //TOdo: move to class constant
-            if ( strlen($optionsParseErrorMessage) === 0 && isset($options['test']) ) {
-//              $language = new ExpressionLanguage();
+            //Is there no error, and a test?
+            if (
+                strlen($optionsParseErrorMessage) === 0
+                && isset($options[self::CONDITION_TEST_PARAM_NAME]) ) {
               $context = [];
-              $expToEval = $options['test'];
+              $expToEval = $options[self::CONDITION_TEST_PARAM_NAME];
               try {
                 //Eval the expression.
-                $result = $this->expressionLanguageService->evaluate($expToEval, $context);
-//                $result = $language->evaluate($expToEval, $context);
+                $result = $this->expressionLanguageService->evaluate(
+                  $expToEval, $context
+                );
                 //Was is truthy?
                 if ( ! $result ) {
                   $failedTestOption = TRUE;
@@ -157,13 +168,11 @@ class SkillCourseParser {
             while ($openTagCount > 0) {
               //Find the tag, either opening or closing.
               $loc = stripos($source, $lookFor, $tagEndPoint);
-//              //Get char prior to tag.
-//              $priorChar = substr($source, $loc - 1, 1);
-//              //Get char prior to the prior char.
-//              $priorCharPriorChar = substr($source, $loc - 2, 1);
-//              //If the match isn't at the start of the line, it's not a tag.
-//              if ( $priorChar === "\n" || ( $priorChar === "/" && $priorCharPriorChar === "\n" ) ) {
-              if ( $this->isTagTextOnLineByItself($source, $tagType['tagName'], $loc) ) {
+              if (
+                    $this->isTagTextOnLineByItself(
+                      $source, $tagType['tagName'], $loc
+                    )
+              ) {
                 //Is it an opening or closing tag?
                 $priorChar = substr($source, $loc - 1, 1);
                 $isEndTag = ($priorChar == '/');
@@ -187,29 +196,41 @@ class SkillCourseParser {
             //Extract the content.
             $tagContent = substr(
               $source, $contentStartPos, $contentEndPos - $contentStartPos);
+            //Append parse error, if there was one.
+            if ( strlen($optionsParseErrorMessage) > 0 ) {
+              $tagContent .= "\n\np(" . self::OPTION_PARSING_ERROR_CLASS . '). '
+                . $optionsParseErrorMessage . "\n\n";
+            }
           }
           //Process the tag.
           $replacementContent = '';
           //If test option failed, leave the replacement content MT.
           if ( ! $failedTestOption ) {
-            $methodName = 'process' . ucfirst(strtolower($tagType['tagName'])) . 'Tag';
-            $replacementContent
-              = call_user_func([$this, $methodName], $tagContent, $options);
+            $methodName
+              = 'process' . ucfirst(strtolower($tagType['tagName'])) . 'Tag';
+            if ( ! method_exists($this, $methodName) ) {
+              $replacementContent
+                = "\n\np(" . self::OPTION_PARSING_ERROR_CLASS . '). '
+                  . "Custom tag method missing: $methodName\n\n";
+            }
+            else {
+              $replacementContent
+                = call_user_func([$this, $methodName], $tagContent, $options);
+            }
           }
           //Replace tag.
-          $source = substr($source, 0, $tagPos) . $replacementContent . substr($source, $tagEndPoint);
+          $source = substr($source, 0, $tagPos) . $replacementContent
+            . substr($source, $tagEndPoint);
           //Move pos to after new content.
           $startChar = $tagPos + strlen($replacementContent);
           if ($startChar >= strlen($source)) {
             $tagPos = FALSE;
           }
           else {
-            list($gotOne, $tagPos) = $this->findOpenTag($source, $tagType['tagName'], $startChar);
-//            $tagPos = stripos($source, $openTagText, $startChar);
+            list($gotOne, $tagPos)
+              = $this->findOpenTag($source, $tagType['tagName'], $startChar);
           }
         } //End while there are more tags of $tagType.
-//      } while ( $gotOne );
-//      } while ( $foundCustomTag );
     }
     return $source;
 
@@ -222,6 +243,8 @@ class SkillCourseParser {
    * @return array [0](array): options. [1](string): error message
    */
   protected function parseParams(string $optionChars){
+    //Make sure each : is followed by a space.
+    $optionChars = $this->fixMissingSpaceInParams($optionChars);
     //Try YAML parsing.
     try {
       $options = Yaml::parse($optionChars);
@@ -232,8 +255,7 @@ class SkillCourseParser {
     }
     if ( is_string($options) ) {
       //Make a message to be shown on the content output page.
-      //Todo: Adjust for missing space error?
-      $message = "Tag parameters don't parse. Missing required spaces is a common error.";
+      $message = "Tag parameters don't parse.";
       return [ [], $message ];
     }
     //Replace tokens.
@@ -245,7 +267,33 @@ class SkillCourseParser {
     return [ $options, '' ];
   }
 
-
+  /**
+   * Make sure each : has a space after it.
+   * @param string $source String to process.
+   * @return string Result.
+   */
+  protected function fixMissingSpaceInParams(string $source) {
+    $result = '';
+    $currentCharPos = 0;
+    $sourceLen = strlen($source);
+    //While there are more chars to process...
+    while( $currentCharPos < $sourceLen ) {
+      //Grab a char.
+      $currentChar = substr($source, $currentCharPos, 1);
+      $result .= $currentChar;
+      //Is it a :?
+      if ( $currentChar === ':' ) {
+        //Make sure next char is a space.
+        $nextChar = substr($source, $currentCharPos+1, 1);
+        if ( $nextChar !== ' ' ) {
+          $result .= ' ';
+        }
+      }
+      //Point to next char.
+      $currentCharPos++;
+    }
+    return $result;
+  }
 
   /**
    * Find the next open tag, is there is one.
@@ -256,7 +304,8 @@ class SkillCourseParser {
    *
    * @return array [0] (boolean): whether found it, [1] (int) if found, where.
    */
-  protected function findOpenTag(string $textToSearch, string $tag, int $searchPosStart) {
+  protected function findOpenTag(string $textToSearch, string $tag,
+                                 int $searchPosStart) {
     $gotOne = false;
     $openTagText = $tag . '.';
     do {
@@ -291,10 +340,13 @@ class SkillCourseParser {
    *
    * @return bool True if the tag text is on a line by itself.
    */
-  protected function isTagTextOnLineByItself(string $textToSearch, string $tag, int $tagPos) {
+  protected function isTagTextOnLineByItself(string $textToSearch, string $tag,
+                                             int $tagPos) {
     //$tag . '.' should be at $tagPos.
     if ( substr($textToSearch, $tagPos, strlen($tag)+1 ) !== $tag . '.' ) {
-      throw new SkillParserException('Tag is not in expected position. tag:' . $tag . ', pos:' . $tagPos);
+      throw new SkillParserException(
+        'Tag is not in expected position. tag:' . $tag . ', pos:' . $tagPos
+      );
     }
     //Get char prior to tag.
     $priorChar = substr($textToSearch, $tagPos - 1, 1);
@@ -329,10 +381,16 @@ class SkillCourseParser {
         $foundNonWhiteSpaceChar = true;
       }
     }
-    //If didn't find non-whitespace chars, tag text has nothing between it and EOL.
+    //If didn't find non-whitespace chars, nothing between tag and EOL.
     return ! $foundNonWhiteSpaceChar;
   }
 
+  /**
+   * Parse text.
+   *
+   * @param string $source Text to parse.
+   * @return string Result.
+   */
   public function parse($source) {
     //Trim whitespace. Authors can use indentation as they want, but it
     //will mess up Textile.
