@@ -26,12 +26,18 @@ class SkillCourseParser {
   protected $tokenService;
 
   /**
+   * @var \Symfony\Component\ExpressionLanguage\ExpressionLanguage
+   */
+  protected $expressionLanguageService;
+
+  /**
    * Quote constructor.
    *
    * @param \Drupal\Core\Utility\Token $token
    */
-  public function __construct(Token $token) {
+  public function __construct(Token $token, $expressionLanguage) {
     $this->tokenService = $token;
+    $this->expressionLanguageService = $expressionLanguage;
     $this->addTagType('exercise', FALSE);
     $this->addTagType('rosie', TRUE);
     $this->addTagType('warning', TRUE);
@@ -104,7 +110,7 @@ class SkillCourseParser {
           //Get its options. YAML on the following lines until there's an MT line.
           //Look from the end of the tag until find two LFs in a row - MT line.
           //Accumulate chars until find it.
-          $tagEndPoint = $tagPos + strlen($openTagText) - 1;
+          $tagEndPoint = $tagPos + strlen($openTagText);
           $optionChars = '';
           $next2Chars = substr($source, $tagEndPoint, 2);
           while ($next2Chars !== "\n\n" && $tagEndPoint < strlen($source)) {
@@ -123,13 +129,14 @@ class SkillCourseParser {
             );
             //Is there a test?
             //TOdo: move to class constant
-            if (!strlen($optionsParseErrorMessage) == 0 && isset($options['test'])) {
-              $language = new ExpressionLanguage();
+            if ( strlen($optionsParseErrorMessage) === 0 && isset($options['test']) ) {
+//              $language = new ExpressionLanguage();
               $context = [];
               $expToEval = $options['test'];
               try {
                 //Eval the expression.
-                $result = $language->evaluate($expToEval, $context);
+                $result = $this->expressionLanguageService->evaluate($expToEval, $context);
+//                $result = $language->evaluate($expToEval, $context);
                 //Was is truthy?
                 if ( ! $result ) {
                   $failedTestOption = TRUE;
@@ -143,7 +150,7 @@ class SkillCourseParser {
           //of options, and close tag.
           $tagContent = '';
           if ($tagType['hasCloseTag']) {
-            $lookFor = $tagType['tagName'] . ".\n";
+            $lookFor = $tagType['tagName'] . ".";
             $openTagCount = 1;
             //Where the content for the tag starts.
             $contentStartPos = $tagEndPoint;
@@ -197,7 +204,7 @@ class SkillCourseParser {
             $tagPos = FALSE;
           }
           else {
-            list($gotOne, $tagPos) = $this->findOpenTag($source, $openTagText, $startChar);
+            list($gotOne, $tagPos) = $this->findOpenTag($source, $tagType['tagName'], $startChar);
 //            $tagPos = stripos($source, $openTagText, $startChar);
           }
         } //End while there are more tags of $tagType.
@@ -225,7 +232,8 @@ class SkillCourseParser {
     }
     if ( is_string($options) ) {
       //Make a message to be shown on the content output page.
-      $message = "Tag parameters don't parse. Check for required spaces.";
+      //Todo: Adjust for missing space error?
+      $message = "Tag parameters don't parse. Missing required spaces is a common error.";
       return [ [], $message ];
     }
     //Replace tokens.
@@ -286,7 +294,7 @@ class SkillCourseParser {
   protected function isTagTextOnLineByItself(string $textToSearch, string $tag, int $tagPos) {
     //$tag . '.' should be at $tagPos.
     if ( substr($textToSearch, $tagPos, strlen($tag)+1 ) !== $tag . '.' ) {
-      throw new SkillParserException('Tag not in expected position. tag:' . $tag . ', pos:' . $tagPos);
+      throw new SkillParserException('Tag is not in expected position. tag:' . $tag . ', pos:' . $tagPos);
     }
     //Get char prior to tag.
     $priorChar = substr($textToSearch, $tagPos - 1, 1);
