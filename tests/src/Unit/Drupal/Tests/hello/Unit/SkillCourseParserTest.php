@@ -14,8 +14,8 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Utility\Token;
 
 class TestableParser extends SkillCourseParser {
-  public function __construct(Token $token) {
-    parent::__construct($token);
+  public function __construct(Token $token, ExpressionLanguage $expressionLanguage) {
+    parent::__construct($token, $expressionLanguage);
   }
 
   public function findOpenTag(string $textToSearch, string $tag, int $searchPosStart) {
@@ -40,6 +40,21 @@ class TestableParser extends SkillCourseParser {
 
 }
 
+class ExpressionLanguage {
+
+  /**
+   * Gets the string representation of the expression.
+   */
+  public function __toString() {
+    return 'dummy_expression';
+  }
+
+  public function evaluate($something) {
+    return eval($something);
+  }
+
+}
+
 /**
  * Tests stuff.
  *
@@ -53,7 +68,12 @@ class SkillCourseParserTest extends UnitTestCase  {
       ->getMock();
     $tokenMock->method('replace')
       ->will($this->returnArgument(0));
-    $parser = new TestableParser($tokenMock);
+    $parser = new TestableParser($tokenMock, new ExpressionLanguage());
+
+
+
+
+
     return $parser;
   }
 
@@ -418,15 +438,25 @@ class SkillCourseParserTest extends UnitTestCase  {
 
   public function testParseCustom1() {
     $parser = $this->makeTestableParser();
-    $source = "fake1.\n\nDog\n\n/fake1.\n";
+    $source = "fake1.\n\nDog\n\n/fake1.\n\nThis is the last one.";
     $result = $parser->parseCustomTags($source);
-
-
-//    $this->assertEquals(4, $params['t1']['t2'], 'Param parse nested.');
-//    $this->assertEquals('duck goose', $params['t1']['animal'], 'Param parse nested.');
-//    $this->assertEquals('2 + 3 > 1', $params['t1']['test'], 'Param parse nested.');
-    $this->assertTrue(strlen($result) > 0, 'Tag OK.');
+    $expected = "\n\nFake \n\nDog\n\nFake\n\n\n\nThis is the last one.";
+    $this->assertEquals($expected, $result, 'Parse results as expected.');
   }
 
+  public function testParseCustom2() {
+    $parser = $this->makeTestableParser();
+    $source = "fake1.\nparam: 1\n\nDog\n\n/fake1.\n\nThis is the last one.";
+    $result = $parser->parseCustomTags($source);
+    $expected = "\n\nFake \n\nDog\n\nFake\n\n\n\nThis is the last one.";
+    $this->assertEquals($expected, $result, 'Parse results as expected.');
+  }
 
+  public function testParseCustom3() {
+    $parser = $this->makeTestableParser();
+    $source = "Dog.\n\nfake1.\ntest: 2+3<1\n\nDog\n\n/fake1.\n\nDogz.";
+    $expected = "Dog.\n\nDogz.";
+    $result = $parser->parseCustomTags($source);
+    $this->assertEquals($expected, $result, 'Parse results as expected.');
+  }
 }
