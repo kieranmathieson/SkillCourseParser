@@ -15,7 +15,7 @@ use Drupal\Core\Utility\Token;
 
 class TestableParser extends SkillCourseParser {
   public function __construct(Token $token, ExpressionLanguage $expressionLanguage) {
-    parent::__construct($token, $expressionLanguage);
+    parent::__construct($token);
   }
 
   public function findOpenTag(string $textToSearch, string $tag, int $searchPosStart) {
@@ -452,11 +452,13 @@ class SkillCourseParserTest extends UnitTestCase  {
     $this->assertEquals($expected, $result, 'Parse results as expected.');
   }
 
-  public function testParseCustom3() {
+  public function testParse1() {
     $parser = $this->makeTestableParser();
-    $source = "Dog.\n\nfake1.\ntest: 2+3<1\n\nDog\n\n/fake1.\n\nDogz.";
-    $expected = "Dog.\n\nDogz.";
-    $result = $parser->parseCustomTags($source);
+    $source = "h1. Dog\n\nDog.\n\nThis is the last one.";
+    $result = $parser->parse($source);
+    $expected = "<h1>Dog</h1>\n\n<p>Dog.</p>\n\n<p>This is the last one.</p>";
     $this->assertEquals($expected, $result, 'Parse results as expected.');
   }
+
+
 }
