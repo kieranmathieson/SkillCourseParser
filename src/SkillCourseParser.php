@@ -35,9 +35,9 @@ class SkillCourseParser {
    *
    * @param \Drupal\Core\Utility\Token $token
    */
-  public function __construct(Token $token, $expressionLanguage) {
+  public function __construct(Token $token) {
     $this->tokenService = $token;
-    $this->expressionLanguageService = $expressionLanguage;
+    $this->expressionLanguageService = new ExpressionLanguage();
     $this->addTagType('exercise', FALSE);
     $this->addTagType('rosie', TRUE);
     $this->addTagType('warning', TRUE);
