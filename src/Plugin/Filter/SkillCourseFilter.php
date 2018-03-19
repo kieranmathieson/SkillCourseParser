@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
 
 use Drupal\hello\SkillCourseParser;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 
 /**
@@ -140,10 +141,11 @@ class SkillCourseFilter extends FilterBase {
     );
 
     $text = html_entity_decode($text);
-
-
-    $parserService = \Drupal::service('hello.skillcourseparser');
-    $result = $parserService->parse($text);
+    $tokenService = \Drupal::service('token');
+    $expressionLanguage = new ExpressionLanguage();
+    $parser = new SkillCourseParser($tokenService, $expressionLanguage);
+//    $parserService = \Drupal::service('hello.skillcourseparser');
+    $result = $parser->parse($text);
 //    $result = $text;
     return new FilterProcessResult($result);
   }
