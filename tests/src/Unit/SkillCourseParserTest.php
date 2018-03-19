@@ -34,8 +34,12 @@ class TestableParser extends SkillCourseParser {
     return parent::parseParams($optionChars);
   }
 
-  public function parseCustomTags($source) {
+  public function parseCustomTags(string $source) {
     return parent::parseCustomTags($source);
+  }
+
+  public function fixMissingSpaceInParams(string $source) {
+    return parent::fixMissingSpaceInParams($source);
   }
 
 }
@@ -323,11 +327,11 @@ class SkillCourseParserTest extends UnitTestCase  {
 
   public function testParamsParse2() {
     $parser = $this->makeTestableParser();
-    //Missing required space.
+    //Missing required space. Parser should fix.
     $source = "t1:3";
     list($params, $parseError) = $parser->parseParams($source);
-    $this->assertEquals([], $params, 'Param not parsed: space missing.');
-    $this->assertTrue(stripos($parseError, 'required spaces') !== false, 'Param parse error message.');
+    $this->assertEquals(3, $params['t1'], 'Param parsed.');
+    $this->assertEquals('', $parseError, 'No param parse error.');
   }
 
   public function testParamsParse3() {
@@ -452,6 +456,28 @@ class SkillCourseParserTest extends UnitTestCase  {
     $this->assertEquals($expected, $result, 'Parse results as expected.');
   }
 
+  public function testParseCustom3() {
+    $parser = $this->makeTestableParser();
+    $source = "fake1.\nparam: 'dog\n\nDog\n\n/fake1.\n\nThis is the last one.";
+    $result = $parser->parseCustomTags($source);
+    $expected = "\n\nFake \n\nDog\n\nFake\n\n\n\nThis is the last one.";
+    $this->assertTrue(
+      stripos($result, SkillCourseParser::OPTION_PARSING_ERROR_CLASS) !== FALSE,
+      'Parse error message, as expected.'
+    );
+  }
+
+  /**
+   * Param parser should add missing spaces after :.
+   */
+  public function testParseCustom4() {
+    $parser = $this->makeTestableParser();
+    $source = "fake1.\nparam:1\n\nDog\n\n/fake1.\n\nThis is the last one.";
+    $result = $parser->parseCustomTags($source);
+    $expected = "\n\nFake \n\nDog\n\nFake\n\n\n\nThis is the last one.";
+    $this->assertEquals($expected, $result, 'Parse results as expected.');
+  }
+
   public function testParse1() {
     $parser = $this->makeTestableParser();
     $source = "h1. Dog\n\nDog.\n\nThis is the last one.";
@@ -459,6 +485,5 @@ class SkillCourseParserTest extends UnitTestCase  {
     $expected = "<h1>Dog</h1>\n\n<p>Dog.</p>\n\n<p>This is the last one.</p>";
     $this->assertEquals($expected, $result, 'Parse results as expected.');
   }
-
 
 }
