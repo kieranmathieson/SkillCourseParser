@@ -4,6 +4,7 @@ use cebe\markdown\Markdown;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\hello\Quote;
 use Drupal\hello\Voles;
+use Drupal\user\Entity\Role;
 use Gregwar\RST\Directives\DangerBlock;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 //use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -295,6 +296,26 @@ Dogs are the *best*!
       '#markup' => $result,
     ];
 
+  }
+
+  public function u1() {
+    $user = \Drupal\user\Entity\User::load(1);
+    $result = $user->getUsername(). '<br>';
+    $roles = $user->getRoles();
+    $roleEntities = Role::loadMultiple($roles);
+    $roleNames='';
+
+    foreach($roleEntities as $indx => $roleEntity) {
+      $roleName = $roleEntity->id();
+      $result .= $roleName . ':<br>';
+      foreach($roleEntity->getPermissions() as $indx2 => $permission) {
+        $result .= $permission . ' <br>';
+      }
+    }
+
+    return [
+      '#markup' => $result,
+    ];
   }
 
 
