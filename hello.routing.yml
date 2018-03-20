@@ -67,4 +67,10 @@ hello.rosie:
     _controller: '\Drupal\hello\Controller\HelloController::helloRosie'
   requirements:
     _permission: 'access content'
-
+hello.u1:
+  path: '/u1'
+  defaults:
+    _controller: '\Drupal\hello\Controller\HelloController::u1'
+    _title: 'User stuff'
+  requirements:
+    _permission: 'access content'
