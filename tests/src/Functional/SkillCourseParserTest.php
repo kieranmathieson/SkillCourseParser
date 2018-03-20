@@ -16,7 +16,7 @@ class SkillCourseParserTest extends BrowserTestBase {
    *
    * @var array
    */
-  public static $modules = ['token', 'hello'];
+  public static $modules = ['node', 'token', 'hello'];
 
   /**
    * A user with permission to administer site configuration.
@@ -31,7 +31,23 @@ class SkillCourseParserTest extends BrowserTestBase {
   protected function setUp() {
 
     parent::setUp();
-    $this->user = $this->drupalCreateUser(['administer site configuration']);
+    // Create an article content type that we will use for testing.
+    $type = $this->container->get('entity_type.manager')->getStorage('node_type')
+      ->create([
+        'type' => 'article',
+        'name' => 'Article',
+      ]);
+    $type->save();
+    $this->container->get('router.builder')->rebuild();
+    $this->user = $this->drupalCreateUser(
+      [
+        'administer site configuration',
+        'create article content',
+//        'create page content',
+//        'use text format basic_html',
+
+      ]
+    );
     $this->drupalLogin($this->user);
   }
 
