@@ -6,7 +6,6 @@ use Drupal\hello\Exception\SkillParserException;
 use Drupal\Core\Utility\Token;
 use Netcarver\Textile\Parser as TextileParser;
 use Symfony\Component\Yaml\Exception\ParseException;
-use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 use Symfony\Component\ExpressionLanguage\SyntaxError;
 
@@ -79,7 +78,9 @@ class SkillCourseParser {
     return $result;
   }
   protected function processRosieTag($content, $options) {
-    $yaps = str_repeat('Yap ', $options['yaps']);
+    //Default to one yap.
+    $numYaps = isset($options['yaps']) ? $options['yaps'] : 1;
+    $yaps = str_repeat('Yap ', $numYaps);
     $result = "\n*$yaps!*\n\n" . $content . "$yaps!\n\n";
     return $result;
   }
@@ -94,8 +95,8 @@ class SkillCourseParser {
    * @return string
    */
   protected function parseCustomTags(string $source) {
-    //Add LF to top of source, in case custom tag is first.
-    $source = "\n" . $source;
+    //Add LF to start and end of source, in case custom tag is first or last.
+    $source = "\n" . $source . "\n";
     //Run through the custom tags.
     foreach ($this->tagTypes as $tagType) {
       //Keep processing $source, until don't find custom tag.
@@ -114,9 +115,9 @@ class SkillCourseParser {
           //Flag to show whether there was a test option, and the tag
           //failed the test.
           $failedTestOption = FALSE;
-          //Error message for YAML parsing of options, if it happens.
+          //Error message for parsing of options, if it happens.
           $optionsParseErrorMessage = '';
-          //Get tag's options. YAML on the following lines until there's
+          //Get tag's options. Options on the following lines until there's
           // an MT line.
           //Look from the end of the tag until find two LFs in a row - MT line.
           //Accumulate chars until find it.
@@ -222,7 +223,7 @@ class SkillCourseParser {
           $source = substr($source, 0, $tagPos) . $replacementContent
             . substr($source, $tagEndPoint);
           //Move pos to after new content.
-          $startChar = $tagPos + strlen($replacementContent);
+          $startChar = 0; //$tagPos + strlen($replacementContent);
           if ($startChar >= strlen($source)) {
             $tagPos = FALSE;
           }
@@ -244,18 +245,17 @@ class SkillCourseParser {
    */
   protected function parseParams(string $optionChars){
     //Make sure each : is followed by a space.
-    $optionChars = $this->fixMissingSpaceInParams($optionChars);
-    //Try YAML parsing.
     try {
-      $options = Yaml::parse($optionChars);
-    } catch (ParseException $e) {
+      $options = parse_ini_string($optionChars);
+    } catch (\Exception $e) {
       //Make a message to be shown on the content output page.
-      $message = 'Tag parameter parse error: ' . $e->getMessage();
+      $message = 'Tag parameter parse error: ' . $e->getMessage() . ', in: '
+        . str_replace("\n", ' _NL_ ', $optionChars);
       return [ [], $message ];
     }
-    if ( is_string($options) ) {
+    if ( $options === FALSE ) {
       //Make a message to be shown on the content output page.
-      $message = "Tag parameters don't parse.";
+      $message = 'Tag parameter parse error in: ' . str_replace("\n", ' _NL_ ', $optionChars);
       return [ [], $message ];
     }
     //Replace tokens.
@@ -265,34 +265,6 @@ class SkillCourseParser {
       $options[$indx] = $newVal;
     }
     return [ $options, '' ];
-  }
-
-  /**
-   * Make sure each : has a space after it.
-   * @param string $source String to process.
-   * @return string Result.
-   */
-  protected function fixMissingSpaceInParams(string $source) {
-    $result = '';
-    $currentCharPos = 0;
-    $sourceLen = strlen($source);
-    //While there are more chars to process...
-    while( $currentCharPos < $sourceLen ) {
-      //Grab a char.
-      $currentChar = substr($source, $currentCharPos, 1);
-      $result .= $currentChar;
-      //Is it a :?
-      if ( $currentChar === ':' ) {
-        //Make sure next char is a space.
-        $nextChar = substr($source, $currentCharPos+1, 1);
-        if ( $nextChar !== ' ' ) {
-          $result .= ' ';
-        }
-      }
-      //Point to next char.
-      $currentCharPos++;
-    }
-    return $result;
   }
 
   /**
@@ -397,7 +369,9 @@ class SkillCourseParser {
     $source = $this->trimWhitespace($source);
     //Parse custom tags.
     $source = $this->parseCustomTags($source);
-
+    //Replace tokens in source.
+    $source = $this->tokenService->replace($source);
+    //Textile time.
     $textileParser = new TextileParser('html5');
     $textileParser
       ->setLineWrap(false)
