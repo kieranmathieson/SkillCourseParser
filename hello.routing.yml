@@ -74,3 +74,17 @@ hello.u1:
     _title: 'User stuff'
   requirements:
     _permission: 'access content'
+hello.p1:
+  path: '/p1'
+  defaults:
+    _controller: '\Drupal\hello\Controller\HelloController::p1'
+    _title: 'Param stuff'
+  requirements:
+    _permission: 'access content'
+hello.p2:
+  path: '/p2'
+  defaults:
+    _controller: '\Drupal\hello\Controller\HelloController::p2'
+    _title: 'Param stuff'
+  requirements:
+    _permission: 'access content'
