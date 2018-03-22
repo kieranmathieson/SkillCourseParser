@@ -1,0 +1,116 @@
+From http://php.net/manual/en/function.parse-ini-file.php
+
+You may want, in some very special cases, to parse multi-dimensional array with N levels in your ini file.
+Something like setting[data][config][debug] = true will result in an error (expected "=").
+
+Here's a little function to match this, using dots (customizable).
+<?php
+function parse_ini_file_multi($file, $process_sections = false, $scanner_mode = INI_SCANNER_NORMAL) {
+    $explode_str = '.';
+    $escape_char = "'";
+    // load ini file the normal way
+    $data = parse_ini_file($file, $process_sections, $scanner_mode);
+    if (!$process_sections) {
+        $data = array($data);
+    }
+    foreach ($data as $section_key => $section) {
+        // loop inside the section
+        foreach ($section as $key => $value) {
+            if (strpos($key, $explode_str)) {
+                if (substr($key, 0, 1) !== $escape_char) {
+                    // key has a dot. Explode on it, then parse each subkeys
+                    // and set value at the right place thanks to references
+                    $sub_keys = explode($explode_str, $key);
+                    $subs =& $data[$section_key];
+                    foreach ($sub_keys as $sub_key) {
+                        if (!isset($subs[$sub_key])) {
+                            $subs[$sub_key] = [];
+                        }
+                        $subs =& $subs[$sub_key];
+                    }
+                    // set the value at the right place
+                    $subs = $value;
+                    // unset the dotted key, we don't need it anymore
+                    unset($data[$section_key][$key]);
+                }
+                // we have escaped the key, so we keep dots as they are
+                else {
+                    $new_key = trim($key, $escape_char);
+                    $data[$section_key][$new_key] = $value;
+                    unset($data[$section_key][$key]);
+                }
+            }
+        }
+    }
+    if (!$process_sections) {
+        $data = $data[0];
+    }
+    return $data;
+}
+?>
+
+The following file:
+<?php
+/*
+[normal]
+foo = bar
+; use quotes to keep your key as it is
+'foo.with.dots' = true
+
+[array]
+foo[] = 1
+foo[] = 2
+
+[dictionary]
+foo[debug] = false
+foo[path] = /some/path
+
+[multi]
+foo.data.config.debug = true
+foo.data.password = 123456
+*/
+?>
+
+will result in:
+<?php
+parse_ini_file_multi('file.ini', true);
+
+Array
+(
+    [normal] => Array
+        (
+            [foo] => bar
+            [foo.with.dots] => 1
+        )
+    [array] => Array
+        (
+            [foo] => Array
+                (
+                    [0] => 1
+                    [1] => 2
+                )
+        )
+    [dictionary] => Array
+        (
+            [foo] => Array
+                (
+                    [debug] =>
+                    [path] => /some/path
+                )
+        )
+    [multi] => Array
+        (
+            [foo] => Array
+                (
+                    [data] => Array
+                        (
+                            [config] => Array
+                                (
+                                    [debug] => 1
+                                )
+                            [password] => 123456
+                        )
+                )
+        )
+)
+?>

@@ -1,0 +1,127 @@
+http://php.net/manual/en/function.parse-ini-file.php
+
+parse_ini_string_m is analog for a parse_ini_string function.
+
+had to code this function due to the lack of a php 5.3 on some hosting.
+
+parse_ini_string_m:
+- ignores commented lines that start with ";" or "#"
+- ignores broken lines that do not have "="
+- supports array values and array value keys
+
+<?php
+function parse_ini_string_m($str) {
+
+    if(empty($str)) return false;
+
+    $lines = explode("\n", $str);
+    $ret = Array();
+    $inside_section = false;
+
+    foreach($lines as $line) {
+
+        $line = trim($line);
+
+        if(!$line || $line[0] == "#" || $line[0] == ";") continue;
+
+        if($line[0] == "[" &amp;&amp; $endIdx = strpos($line, "]")){
+            $inside_section = substr($line, 1, $endIdx-1);
+            continue;
+        }
+
+        if(!strpos($line, '=')) continue;
+
+        $tmp = explode("=", $line, 2);
+
+        if($inside_section) {
+
+            $key = rtrim($tmp[0]);
+            $value = ltrim($tmp[1]);
+
+            if(preg_match("/^\".*\"$/", $value) || preg_match("/^'.*'$/", $value)) {
+                $value = mb_substr($value, 1, mb_strlen($value) - 2);
+            }
+
+            $t = preg_match("^\[(.*?)\]^", $key, $matches);
+            if(!empty($matches) &amp;&amp; isset($matches[0])) {
+
+                $arr_name = preg_replace('#\[(.*?)\]#is', '', $key);
+
+                if(!isset($ret[$inside_section][$arr_name]) || !is_array($ret[$inside_section][$arr_name])) {
+                    $ret[$inside_section][$arr_name] = array();
+                }
+
+                if(isset($matches[1]) &amp;&amp; !empty($matches[1])) {
+                    $ret[$inside_section][$arr_name][$matches[1]] = $value;
+                } else {
+                    $ret[$inside_section][$arr_name][] = $value;
+                }
+
+            } else {
+                $ret[$inside_section][trim($tmp[0])] = $value;
+            }
+
+        } else {
+
+            $ret[trim($tmp[0])] = ltrim($tmp[1]);
+
+        }
+    }
+    return $ret;
+}
+?>
+
+example usage:
+
+<?php
+$ini = '
+
+    [simple]
+    val_one = "some value"
+    val_two = 567
+
+    [array]
+    val_arr[] = "arr_elem_one"
+    val_arr[] = "arr_elem_two"
+    val_arr[] = "arr_elem_three"
+
+    [array_keys]
+    val_arr_two[6] = "key_6"
+    val_arr_two[some_key] = "some_key_value"
+
+';
+
+$arr = parse_ini_string_m($ini);
+?>
+
+variable $arr output:
+
+Array
+(
+    [simple] => Array
+    (
+        [val_one] => some value
+        [val_two] => 567
+    )
+
+    [array] => Array
+    (
+        [val_arr] => Array
+        (
+            [0] => arr_elem_one
+            [1] => arr_elem_two
+            [2] => arr_elem_three
+        )
+    )
+
+    [array_keys] => Array
+    (
+        [val_arr_two] => Array
+        (
+            [6] => key_6
+            [some_key] => some_key_value
+        )
+
+    )
+
+)
