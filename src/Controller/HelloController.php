@@ -19,6 +19,8 @@ use Gregwar\RST\Parser as RestParser;
 use Netcarver\Textile\Parser as TextileParser;
 
 use Drupal\hello\SkillCourseParser;
+use Symfony\Component\Yaml\Yaml;
+
 
 /**
  * Controller for the salutation message.
@@ -316,6 +318,76 @@ Dogs are the *best*!
     return [
       '#markup' => $result,
     ];
+  }
+
+  public function p1() {
+    $source = "
+; This is a sample configuration file
+; Comments start with ';', as in php.ini
+
+[first_section]
+one = 1
+five = 5
+animal = BIRD
+
+[second_section]
+path = '/usr/local/bin'
+URL = 'http://www.example.com/~username'
+
+[third_section]
+phpversion[] = '5.0'
+phpversion[] = '5.1'
+phpversion[]=5.2
+phpversion[] = '5.3'
+
+urls[svn] = 'http://svn.php.net'
+urls[git] = 'http://git.php.net'    
+    ";
+    try {
+      $options = parse_ini_string($source);
+      $result = '<pre>' . print_r($options, TRUE).'</pre>';
+    } catch (\Exception $e) {
+      $result = 'Grunt';
+    }
+    return [
+      '#markup' => $result,
+    ];
+
+  }
+
+  public function p2() {
+    $source = "
+; This is a sample configuration file
+; Comments start with ';', as in php.ini
+
+[first_section]
+test = [current-user:field_toes] < 10
+five = 5
+  animal = 'DOGS!'
+
+[second_section]
+path = '/usr/local/bin'
+URL = 'http://www.example.com/~username'
+
+[third_section]
+phpversion[] = '5.0'
+phpversion[] = '5.1'
+phpversion[]=5.2
+phpversion[] = '5.3'
+
+urls[svn] = 'http://svn.php.net'
+urls[git] = 'http://git.php.net'    
+    ";
+    try {
+      $options = parse_ini_string($source);
+      $result = '<pre>' . print_r($options, TRUE).'</pre>';
+    } catch (\Exception $e) {
+      $result = 'Grunt';
+    }
+    return [
+      '#markup' => $result,
+    ];
+
   }
 
 
