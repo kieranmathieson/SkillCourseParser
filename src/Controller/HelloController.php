@@ -110,21 +110,18 @@ class HelloController extends ControllerBase {
     ];
   }
 
-
   public function el2() {
 
     $language = new ExpressionLanguage();
+    $expression = '"dog"=="dog"';
+    $expression = "not('No' == 'Yes')";
 
-    $elExs = [];
-    $elExs['ex1'] = new ElExercise();
-    $elExs['ex1']->submitted = FALSE;
-    $elExs['ex1']->completed = FALSE;
-    $expression = 'exercises["ex1"].submitted';
-    $context = [
-      'exercises' => $elExs,
+    $msg = $language->evaluate($expression);// ? 'Ex1 submitted' : 'Ex1 not submitted';
+    return [
+      '#markup' => $this->t('El2:' . $msg)
     ];
-    $msg = $language->evaluate($expression, $context) ? 'Ex1 submitted' : 'Ex1 not submitted';
   }
+
 
 
     public function rst1() {
@@ -357,26 +354,7 @@ urls[git] = 'http://git.php.net'
 
   public function p2() {
     $source = "
-; This is a sample configuration file
-; Comments start with ';', as in php.ini
-
-[first_section]
-test = [current-user:field_toes] < 10
-five = 5
-  animal = 'DOGS!'
-
-[second_section]
-path = '/usr/local/bin'
-URL = 'http://www.example.com/~username'
-
-[third_section]
-phpversion[] = '5.0'
-phpversion[] = '5.1'
-phpversion[]=5.2
-phpversion[] = '5.3'
-
-urls[svn] = 'http://svn.php.net'
-urls[git] = 'http://git.php.net'    
+t = not 6   
     ";
     try {
       $options = parse_ini_string($source);
