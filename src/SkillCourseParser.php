@@ -39,6 +39,7 @@ class SkillCourseParser {
     $this->tokenService = $token;
     $this->expressionLanguageService = new ExpressionLanguage();
     $this->addTagType('exercise', FALSE);
+    $this->addTagType('condition', TRUE);
     $this->addTagType('rosie', TRUE);
     $this->addTagType('warning', TRUE);
     $this->addTagType('fake1', TRUE);
@@ -72,6 +73,18 @@ class SkillCourseParser {
   protected function processFake1Tag($content, $options) {
     $result = "\nFake " . $content . "Fake\n\n";
     return $result;
+  }
+
+  /**
+   * Passes content through, subject only to test that is processed
+   * automatically by the parser.
+   *
+   * @param $content Content to parse.
+   * @param $options Options, not used.
+   * @return string Content.
+   */
+  protected function processConditionTag($content, $options) {
+    return $content;
   }
   protected function processExerciseTag($content, $options) {
     $result = "\nThis is the exercise: " . $options['name'] . ".\n\n";
@@ -222,15 +235,10 @@ class SkillCourseParser {
           //Replace tag.
           $source = substr($source, 0, $tagPos) . $replacementContent
             . substr($source, $tagEndPoint);
-          //Move pos to after new content.
-          $startChar = 0; //$tagPos + strlen($replacementContent);
-          if ($startChar >= strlen($source)) {
-            $tagPos = FALSE;
-          }
-          else {
-            list($gotOne, $tagPos)
-              = $this->findOpenTag($source, $tagType['tagName'], $startChar);
-          }
+          //Move back to the start, and look for another custom tag.
+          $startChar = 0;
+          list($gotOne, $tagPos)
+            = $this->findOpenTag($source, $tagType['tagName'], $startChar);
         } //End while there are more tags of $tagType.
     }
     return $source;
@@ -246,7 +254,7 @@ class SkillCourseParser {
   protected function parseParams(string $optionChars){
     //Make sure each : is followed by a space.
     try {
-      $options = parse_ini_string($optionChars);
+      $options = parse_ini_string(strtolower($optionChars), FALSE, INI_SCANNER_TYPED);
     } catch (\Exception $e) {
       //Make a message to be shown on the content output page.
       $message = 'Tag parameter parse error: ' . $e->getMessage() . ', in: '
@@ -261,7 +269,7 @@ class SkillCourseParser {
     //Replace tokens.
     foreach($options as $indx=>$val) {
       //Todo: what happens for invalid token?
-      $newVal = $this->tokenService->replace($val);
+      $newVal = strtolower($this->tokenService->replace($val));
       $options[$indx] = $newVal;
     }
     return [ $options, '' ];
