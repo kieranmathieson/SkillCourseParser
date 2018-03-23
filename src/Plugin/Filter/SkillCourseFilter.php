@@ -10,9 +10,8 @@ use Drupal\filter\Plugin\FilterBase;
 use Drupal\Core\Form\FormStateInterface;
 
 use Drupal\hello\SkillCourseParser;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
+use Symfony\Component\DependencyInjection\ExpressionLanguage;
 
 /**
  * @Filter(
@@ -147,7 +146,11 @@ class SkillCourseFilter extends FilterBase {
 //    $parserService = \Drupal::service('hello.skillcourseparser');
     $result = $parser->parse($text);
 //    $result = $text;
-    return new FilterProcessResult($result);
+    $markup = new FilterProcessResult($result);
+    $markup->setAttachments(array(
+      'library' => array('hello/hello-styles'),
+    ));
+    return $markup;
   }
 
   public function settingsForm(array $form, FormStateInterface $form_state) {
