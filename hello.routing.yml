@@ -12,6 +12,13 @@ hello.el1:
     _title: 'Expression language 1'
   requirements:
     _permission: 'access content'
+hello.el2:
+  path: '/el2'
+  defaults:
+    _controller: '\Drupal\hello\Controller\HelloController::el2'
+    _title: 'Expression language 2'
+  requirements:
+    _permission: 'access content'
 hello.cebe1:
   path: '/cebe1'
   defaults:
