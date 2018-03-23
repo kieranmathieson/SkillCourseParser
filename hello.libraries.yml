@@ -1,0 +1,5 @@
+hello-styles:
+  version: 1.x
+  css:
+    theme:
+        hello.theme.css: {}

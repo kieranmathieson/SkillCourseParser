@@ -1,0 +1,13 @@
+.language-note {
+    margin-left: 2rem;
+    padding: 1rem;
+    background-color: #fcfcfc;
+    border: solid thin #ccc;
+}
+
+.hi-vis {
+    margin-left: 2rem;
+    padding: 1rem;
+    border: thick black solid;
+    font-size: x-large;
+}
