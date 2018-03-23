@@ -424,12 +424,14 @@ class SkillCourseParserTest extends UnitTestCase  {
   }
 
 
-
+  /**
+   * Parser adds an EOL on the end of the source string, if there isn't one.
+   */
   public function testParseCustom1() {
     $parser = $this->makeTestableParser();
     $source = "fake1.\n\nDog\n\n/fake1.\n\nThis is the last one.";
     $result = $parser->parseCustomTags($source);
-    $expected = "\n\nFake \n\nDog\n\nFake\n\n\n\nThis is the last one.";
+    $expected = "\n\nFake \n\nDog\n\nFake\n\n\n\nThis is the last one.\n";
     $this->assertEquals($expected, $result, 'Parse results as expected.');
   }
 
@@ -437,7 +439,7 @@ class SkillCourseParserTest extends UnitTestCase  {
     $parser = $this->makeTestableParser();
     $source = "fake1.\nparam = 1\n\nDog\n\n/fake1.\n\nThis is the last one.";
     $result = $parser->parseCustomTags($source);
-    $expected = "\n\nFake \n\nDog\n\nFake\n\n\n\nThis is the last one.";
+    $expected = "\n\nFake \n\nDog\n\nFake\n\n\n\nThis is the last one.\n";
     $this->assertEquals($expected, $result, 'Parse results as expected.');
   }
 
