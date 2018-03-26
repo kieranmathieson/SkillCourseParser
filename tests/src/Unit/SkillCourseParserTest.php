@@ -9,9 +9,15 @@
 namespace Drupal\Tests\hello\Unit;
 
 use Drupal\hello\Exception\SkillParserException;
+use Drupal\hello\ElExercise;
 use Drupal\hello\SkillCourseParser;
+//use Drupal\hello\SkillCourseParser;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Utility\Token;
+
+class rr extends  ElExercise {
+
+}
 
 class TestableParser extends SkillCourseParser {
   public function __construct(Token $token, ExpressionLanguage $expressionLanguage) {
@@ -73,11 +79,6 @@ class SkillCourseParserTest extends UnitTestCase  {
     $tokenMock->method('replace')
       ->will($this->returnArgument(0));
     $parser = new TestableParser($tokenMock, new ExpressionLanguage());
-
-
-
-
-
     return $parser;
   }
 
@@ -114,7 +115,7 @@ class SkillCourseParserTest extends UnitTestCase  {
     $openTagText = 'here';
     $tagPos = 9;
     $tagOnLineByItself = $parser->isTagTextOnLineByItself($textToSearch, $openTagText, $tagPos);
-    $this->assertfalse($tagOnLineByItself, 'Tag is not on a line by itself.');
+    $this->assertFalse($tagOnLineByItself, 'Tag is not on a line by itself.');
   }
 
   public function testIsTagTextOnLineByItself5() {
