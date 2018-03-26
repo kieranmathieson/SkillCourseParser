@@ -38,15 +38,11 @@ class SkillCourseFilter extends FilterBase {
    * @see \Drupal\filter\FilterProcessResult
    */
   public function process($text, $langcode) {
-    $chocMessage = 'There is '
-        . ($this->settings['there_is_chocolate'] ? '' : 'no ') . "chocolate.\n\n";
-    $text = $chocMessage . $text;
+//    $chocMessage = 'There is '
+//        . ($this->settings['there_is_chocolate'] ? '' : 'no ') . "chocolate.\n\n";
+//    $text = $chocMessage . $text;
     $text = str_replace("<br />\n", "\n", $text, $count);
-//    //Var to count number of replacements made. Set by str_replace.
-//    $count = 0;
-//    do {
-//      $text = str_replace("<br />\n", "\n", $text, $count);
-//    } while ($count > 0);
+    $text = str_replace("<br />", "\n", $text, $count);
     $text = str_replace("&nbsp;", ' ', $text);
     //Find image tags, replace with path to file.
     $text = preg_replace_callback(
