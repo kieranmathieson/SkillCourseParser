@@ -45,7 +45,11 @@ class SkillCourseParser {
     $this->addTagType('fake1', TRUE);
   }
 
-  protected function addTagType($tagName, $hasCloseTag) {
+  /**
+   * @param string $tagName Tag, e.g., exercise.
+   * @param boolean $hasCloseTag True is this tag has a close part.
+   */
+  protected function addTagType(string $tagName, bool $hasCloseTag) {
     $this->tagTypes[] = ['tagName'=>$tagName, 'hasCloseTag'=>$hasCloseTag];
   }
 
@@ -62,12 +66,14 @@ class SkillCourseParser {
     //Explode into array, one element for each line.
     $lines = explode("\n", $source);
     //Strip whitespace from each line.
+    $linesOut = [];
     for ($i = 0; $i < count($lines); $i++) {
-      $lines[$i] = trim($lines[$i]);
+      $linesOut[] = trim($lines[$i], " \t\n\r\0\x0B\xA0\xC2");
+      //A0 is nbsp. C2 is..., er, don't know what this appears. TODO: why?
     }
     //Convert from array back into one string.
-    $source = implode("\n", $lines);
-    return $source;
+    $result = implode("\n", $linesOut);
+    return $result;
   }
 
   protected function processFake1Tag($content, $options) {
@@ -114,7 +120,7 @@ class SkillCourseParser {
     foreach ($this->tagTypes as $tagType) {
       //Keep processing $source, until don't find custom tag.
       //This is for nested tags.
-        $foundCustomTag = FALSE;
+//        $foundCustomTag = FALSE;
         $startChar = 0;
         $openTagText = $tagType['tagName'] . ".";
         list($gotOne, $tagPos) = $this->findOpenTag(
@@ -124,7 +130,7 @@ class SkillCourseParser {
           //Found one.
           //Flag to continue processing after this tag, so nested tags
           //are processed.
-          $foundCustomTag = TRUE;
+//          $foundCustomTag = TRUE;
           //Flag to show whether there was a test option, and the tag
           //failed the test.
           $failedTestOption = FALSE;
