@@ -1,6 +1,10 @@
 http://php.net/manual/en/function.parse-ini-file.php
 
-This core function won't handle ini key[][] = value(s), (multidimensional arrays), so if you need to support that kind of setup you will need to write your own function. one way to do it is to convert all the key = value(s) to array string [key][][]=value(s), then use parse_str() to convert all those [key][][]=value(s) that way you just read the ini file line by line, instead of doing crazy foreach() loops to handle those (multidimensional arrays) in each section, example...
+This core function won't handle ini key[][] = value(s), (multidimensional arrays), so if you need to
+support that kind of setup you will need to write your own function. one way to do it is to convert all
+the key = value(s) to array string [key][][]=value(s), then use parse_str() to convert all those
+[key][][]=value(s) that way you just read the ini file line by line, instead of doing crazy foreach() loops to
+handle those (multidimensional arrays) in each section, example...
 
 ini file...... config.php
 
