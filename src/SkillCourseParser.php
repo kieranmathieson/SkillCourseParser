@@ -173,7 +173,8 @@ class SkillCourseParser {
                   $failedTestOption = TRUE;
                 }
               } catch (SyntaxError $e) {
-                $optionsParseErrorMessage = 'Error in expression: ' . $expToEval;
+                $optionsParseErrorMessage = 'Error in expression: ' . $expToEval
+                 . ': ' . $e->getMessage();
               }
             }
           } //End there are option chars.
@@ -188,6 +189,11 @@ class SkillCourseParser {
             while ($openTagCount > 0) {
               //Find the tag, either opening or closing.
               $loc = stripos($source, $lookFor, $tagEndPoint);
+              //If didn't find anything, then missing end tag.
+              if ( $loc === FALSE ) {
+                return 'h2. Missing/invalid close tag? Missing . at end? Tag: '
+                  . $tagType['tagName'];
+              }
               if (
                     $this->isTagTextOnLineByItself(
                       $source, $tagType['tagName'], $loc
