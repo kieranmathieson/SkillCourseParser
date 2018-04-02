@@ -60,6 +60,24 @@ class IniExtendedTest extends UnitTestCase {
     $this->assertFalse($result['default']['elfy'], 'Got lies');
   }
 
+  public function testSimpleParam6() {
+    $source = 'elfy="mouse.ear"';
+    $result = IniExtended::parse($source);
+    $this->assertEquals(1, count($result), 'One element returned');
+    $this->assertTrue(isset($result['default']), 'default section');
+    $this->assertTrue(isset($result['default']['elfy']), 'elfy exists');
+    $this->assertEquals("mouse.ear", $result['default']['elfy'], 'Got mouse ear');
+  }
+
+  public function testSimpleParam7() {
+    $source = 'elfy=mouse.ear';
+    $result = IniExtended::parse($source);
+    $this->assertEquals(1, count($result), 'One element returned');
+    $this->assertTrue(isset($result['default']), 'default section');
+    $this->assertTrue(isset($result['default']['elfy']), 'elfy exists');
+    $this->assertEquals("mouse.ear", $result['default']['elfy'], 'Got mouse ear');
+  }
+
   public function testMultiParam1() {
     $source = "zim=1\ngir=2";
     $result = IniExtended::parse($source);
@@ -158,6 +176,25 @@ class IniExtendedTest extends UnitTestCase {
     $this->assertEquals(1, count($result['default']['gir']), 'Got one for gir');
     $this->assertTrue($result['default']['zim']['toes'], 'Got zim toes');
     $this->assertFalse($result['default']['gir']['fingers'], 'Got gir fingers');
+  }
+
+  /**
+   * Test for missing name component after dot.
+   */
+  public function testNestedParam5() {
+    $source = "zim.toes.=4\ngir.fingers=6";
+    $result = IniExtended::parse($source);
+    $this->assertEquals(1, count($result), 'One element returned');
+    $this->assertTrue(isset($result['default']), 'default section');
+    $this->assertTrue(isset($result['default']['zim']), 'zim exists');
+    $this->assertTrue(isset($result['default']['gir']), 'gir exists');
+    $this->assertEquals(2, count($result['default']), 'Got pair');
+    $this->assertTrue(isset($result['default']['zim']['toes']), 'zim toes exists');
+    $this->assertTrue(isset($result['default']['gir']['fingers']), 'gir fingers exists');
+    $this->assertEquals(1, count($result['default']['zim']), 'Got one for zim');
+    $this->assertEquals(1, count($result['default']['gir']), 'Got one for gir');
+    $this->assertEquals(4, $result['default']['zim']['toes'][''], 'Got zim toes');
+    $this->assertEquals(6, $result['default']['gir']['fingers'], 'Got gir fingers');
   }
 
   public function testSection1() {
