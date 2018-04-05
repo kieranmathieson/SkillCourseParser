@@ -6,8 +6,10 @@ use Drupal\hello\Exception\SkillParserException;
 use Drupal\Core\Utility\Token;
 use Netcarver\Textile\Parser as TextileParser;
 use Symfony\Component\Yaml\Exception\ParseException;
-use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
-use Symfony\Component\ExpressionLanguage\SyntaxError;
+//use Symfony\Component\ExpressionLanguage\SyntaxError;
+use Symfony\Component\DependencyInjection\ExpressionLanguage;
+
+
 
 /**
  * Class SkillCourseTags.
@@ -26,7 +28,7 @@ class SkillCourseParser {
   protected $tokenService;
 
   /**
-   * @var \Symfony\Component\ExpressionLanguage\ExpressionLanguage
+   * @var \Symfony\Component\DependencyInjection\ExpressionLanguage;
    */
   protected $expressionLanguageService;
 
@@ -172,7 +174,8 @@ class SkillCourseParser {
                 if ( ! $result ) {
                   $failedTestOption = TRUE;
                 }
-              } catch (SyntaxError $e) {
+              } catch (\Exception $e) {
+//              } catch (SyntaxError $e) {
                 $optionsParseErrorMessage = 'Error in expression: ' . $expToEval
                  . ': ' . $e->getMessage();
               }

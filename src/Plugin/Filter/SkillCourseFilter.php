@@ -7,11 +7,14 @@ use Drupal\filter\Annotation\Filter;
 use Drupal\filter\FilterProcessResult;
 use Drupal\filter\Plugin\FilterBase;
 
-use Drupal\Core\Form\FormStateInterface;
+//use Drupal\Core\Form\FormStateInterface;
 
 use Drupal\hello\SkillCourseParser;
 
-use Symfony\Component\DependencyInjection\ExpressionLanguage;
+//use Symfony\Component\DependencyInjection\ExpressionLanguage;
+
+//use Symfony\Component\ExpressionLanguage;
+
 
 /**
  * @Filter(
@@ -38,6 +41,7 @@ class SkillCourseFilter extends FilterBase {
    * @see \Drupal\filter\FilterProcessResult
    */
   public function process($text, $langcode) {
+
 //    $chocMessage = 'There is '
 //        . ($this->settings['there_is_chocolate'] ? '' : 'no ') . "chocolate.\n\n";
 //    $text = $chocMessage . $text;
@@ -137,8 +141,9 @@ class SkillCourseFilter extends FilterBase {
 
     $text = html_entity_decode($text);
     $tokenService = \Drupal::service('token');
-    $expressionLanguage = new ExpressionLanguage();
-    $parser = new SkillCourseParser($tokenService, $expressionLanguage);
+//    $expressionLanguage = new ExpressionLanguage();
+    $parser = new SkillCourseParser($tokenService);
+//    $parser = new SkillCourseParser($tokenService, $expressionLanguage);
 //    $parserService = \Drupal::service('hello.skillcourseparser');
     $result = $parser->parse($text);
 //    $result = $text;
