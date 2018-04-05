@@ -5,3 +5,10 @@
     border: solid thin red;
     font-size: 125%;
 }
+
+.warning {
+    margin: 2rem;
+    background-color: yellow;
+    padding: 1rem;
+    border-radius: 4px;
+}
