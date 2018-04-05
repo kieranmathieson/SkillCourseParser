@@ -149,13 +149,13 @@ class SkillCourseFilter extends FilterBase {
     return $markup;
   }
 
-  public function settingsForm(array $form, FormStateInterface $form_state) {
-    $form['there_is_chocolate'] = array(
-      '#type' => 'checkbox',
-      '#title' => $this->t('Is there chocolate?'),
-      '#default_value' => $this->settings['there_is_chocolate'],
-      '#description' => $this->t('Check if there is chocolate.'),
-    );
-    return $form;
-  }
+//  public function settingsForm(array $form, FormStateInterface $form_state) {
+//    $form['there_is_chocolate'] = array(
+//      '#type' => 'checkbox',
+//      '#title' => $this->t('Is there chocolate?'),
+//      '#default_value' => $this->settings['there_is_chocolate'],
+//      '#description' => $this->t('Check if there is chocolate.'),
+//    );
+//    return $form;
+//  }
 }
