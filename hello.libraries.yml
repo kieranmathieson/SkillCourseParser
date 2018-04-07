@@ -3,3 +3,4 @@ hello-styles:
   css:
     theme:
         hello.theme.css: {}
+        css/display.css: {}
