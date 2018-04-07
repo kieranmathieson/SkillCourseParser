@@ -11,3 +11,14 @@
     border: thick black solid;
     font-size: x-large;
 }
+
+.option-parsing-error {
+    margin: 1rem;
+    padding:  0.5rem;
+    background-color: #FFFF00;
+    border: solid thin red;
+    font-size: 125%;
+}
+
+
+
