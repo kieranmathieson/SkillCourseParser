@@ -106,7 +106,10 @@ class SkillCourseParser {
     return $result;
   }
   protected function processWarningTag($content, $options) {
-    $result = "\n\n<div class='warning'>" . $content . "</div>\n\n";
+    //Extra spaces before HTML tags are needed so that Textile does not wrap
+    //them in p tags.
+    $result = "\n\n <div class='warning-container'>\n <div class='warning-title'>Warning</div>\n\n" . $content . "\n\n </div>";
+//    $result = "\n\n<div class='warning'><h3 class='warning'>Warning</h3>" . $content . "</div>\n\n";
     return $result;
   }
 
