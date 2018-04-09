@@ -95,3 +95,17 @@ hello.p2:
     _title: 'Param stuff'
   requirements:
     _permission: 'access content'
+hello.exp1:
+  path: '/exp1'
+  defaults:
+    _controller: '\Drupal\hello\Controller\HelloController::exp1'
+    _title: 'Exp stuff'
+  requirements:
+    _permission: 'access content'
+hello.exp2:
+  path: '/exp2'
+  defaults:
+    _controller: '\Drupal\hello\Controller\HelloController::exp2'
+    _title: 'Exp stuff'
+  requirements:
+    _permission: 'access content'
