@@ -1,0 +1,12 @@
+Settings tag?
+
+Debug, for authors to see results of expression evaluation. Option in settings tag? Checkbox (field)?
+
+Run every option's value through eval?
+
+Set tag to set variables?
+
+    set.
+
+
+exercise.
