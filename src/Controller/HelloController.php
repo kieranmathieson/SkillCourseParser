@@ -368,5 +368,27 @@ t = not 6
 
   }
 
+  public function exp1() {
+    $astAsArray = (new ExpressionLanguage())
+      ->parse('1 + 4', array('thing' => 5))
+      ->getNodes()
+      ->toArray()
+    ;
+    $astAsString = print_r($astAsArray, TRUE);
+    return [
+      '#markup' => '<pre>' . $astAsString . '</pre>',
+    ];
+  }
 
+  public function exp2() {
+    $language = new ExpressionLanguage();
+    $el = new ElExercise();
+    $el->submitted = '88';
+    $expression = '"german" in el.languages ? "Speaks German" : "No german"';
+    $expression = 'el.copy2("dog") == "dogdog" ? "Is dog dog" : "not dog dog"';
+    $msg = $language->evaluate($expression, ['el' => $el]);// ? 'Ex1 submitted' : 'Ex1 not submitted';
+    return [
+      '#markup' => $this->t('Exp2:' . $msg)
+    ];
+  }
 }
