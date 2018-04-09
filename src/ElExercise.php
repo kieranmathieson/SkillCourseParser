@@ -12,6 +12,22 @@ namespace Drupal\hello;
 class ElExercise {
   public $submitted;
   public $completed;
+  public $firstLanguage;
 
+  public function __construct($firstLanguage='english') {
+    $this->firstLanguage = $firstLanguage;
+  }
+
+  public function times2($x) {
+    return $x*2;
+  }
+
+  public function copy2($x) {
+    return $x . $x;
+  }
+
+  public function languages() {
+    return ['french', 'german'];
+  }
   
 }
