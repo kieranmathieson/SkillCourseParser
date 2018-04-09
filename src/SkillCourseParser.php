@@ -8,6 +8,7 @@ use Netcarver\Textile\Parser as TextileParser;
 use Symfony\Component\Yaml\Exception\ParseException;
 //use Symfony\Component\ExpressionLanguage\SyntaxError;
 use Symfony\Component\DependencyInjection\ExpressionLanguage;
+use Drupal\hello\IniExtended;
 
 
 
@@ -168,6 +169,10 @@ class SkillCourseParser {
                 && isset($options[self::CONDITION_TEST_PARAM_NAME]) ) {
               $context = [];
               $expToEval = $options[self::CONDITION_TEST_PARAM_NAME];
+              //FALSE is a special case for exp lang to get right.
+              if ( $expToEval === FALSE ) {
+                $expToEval = 'false';
+              }
               try {
                 //Eval the expression.
                 $result = $this->expressionLanguageService->evaluate(
@@ -264,7 +269,7 @@ class SkillCourseParser {
   }
 
   /**
-   * Parse tag params as YAML. Substitute tokens.
+   * Parse tag params in INI format. Substitute tokens.
    * @param string $optionChars Params as string to parse.
    *
    * @return array [0](array): options. [1](string): error message
@@ -272,7 +277,8 @@ class SkillCourseParser {
   protected function parseParams(string $optionChars){
     //Make sure each : is followed by a space.
     try {
-      $options = parse_ini_string(strtolower($optionChars), FALSE, INI_SCANNER_TYPED);
+      $options = IniExtended::parse($optionChars);
+      //$options = parse_ini_string(strtolower($optionChars), FALSE, INI_SCANNER_RAW);
     } catch (\Exception $e) {
       //Make a message to be shown on the content output page.
       $message = 'Tag parameter parse error: ' . $e->getMessage() . ', in: '
@@ -284,10 +290,14 @@ class SkillCourseParser {
       $message = 'Tag parameter parse error in: ' . str_replace("\n", ' _NL_ ', $optionChars);
       return [ [], $message ];
     }
+    //Use [default] section as the entire options array.
+    if ( isset($options['default']) ) {
+      $options = $options['default'];
+    }
     //Replace tokens.
     foreach($options as $indx=>$val) {
       //Todo: what happens for invalid token?
-      $newVal = strtolower($this->tokenService->replace($val));
+      $newVal = $this->tokenService->replace($val);
       $options[$indx] = $newVal;
     }
     return [ $options, '' ];
