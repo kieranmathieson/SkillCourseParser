@@ -41,11 +41,15 @@ class SkillCourseParser {
   public function __construct(Token $token) {
     $this->tokenService = $token;
     $this->expressionLanguageService = new ExpressionLanguage();
+    $this->addTagType('container', TRUE);
     $this->addTagType('exercise', FALSE);
-    $this->addTagType('condition', TRUE);
-    $this->addTagType('rosie', TRUE);
+    $this->addTagType('principle', FALSE);
     $this->addTagType('warning', TRUE);
-    $this->addTagType('fake1', TRUE);
+    $this->addTagType('show_exercises_in_class', FALSE);
+    $this->addTagType('show_one', FALSE);
+    $this->addTagType('variable', FALSE);
+    $this->addTagType('stop', TRUE);
+
   }
 
   /**
@@ -79,11 +83,6 @@ class SkillCourseParser {
     return $result;
   }
 
-  protected function processFake1Tag($content, $options) {
-    $result = "\nFake " . $content . "Fake\n\n";
-    return $result;
-  }
-
   /**
    * Passes content through, subject only to test that is processed
    * automatically by the parser.
@@ -92,14 +91,14 @@ class SkillCourseParser {
    * @param $options Options, not used.
    * @return string Content.
    */
-  protected function processConditionTag($content, $options) {
+  protected function processContainerTag($content, $options) {
     return $content;
   }
   protected function processExerciseTag($content, $options) {
     $result = "\nThis is the exercise: " . $options['name'] . ".\n\n";
     return $result;
   }
-  protected function processRosieTag($content, $options) {
+  protected function processPrincipleTag($content, $options) {
     //Default to one yap.
     $numYaps = isset($options['yaps']) ? $options['yaps'] : 1;
     $yaps = str_repeat('Yap ', $numYaps);
@@ -114,6 +113,26 @@ class SkillCourseParser {
     return $result;
   }
 
+  protected function processExercisesInClassTag($content, $options) {
+    $result = "\n " . $content . "\n\n";
+    return $result;
+  }
+
+  protected function processShowOneTag($content, $options) {
+    $result = "\n " . $content . "\n\n";
+    return $result;
+  }
+
+  protected function processVariableTag($content, $options) {
+    $result = "\n " . $content . "\n\n";
+    return $result;
+  }
+
+  protected function processStopTag($content, $options) {
+    $result = "\n " . $content . "\n\n";
+    return $result;
+  }
+
   /**
    * Parse custom tags.
    * @param $source
@@ -124,145 +143,140 @@ class SkillCourseParser {
     $source = "\n" . $source . "\n";
     //Run through the custom tags.
     foreach ($this->tagTypes as $tagType) {
-      //Keep processing $source, until don't find custom tag.
-      //This is for nested tags.
-//        $foundCustomTag = FALSE;
-        $startChar = 0;
-        $openTagText = $tagType['tagName'] . ".";
-        list($gotOne, $tagPos) = $this->findOpenTag(
-          $source, $tagType['tagName'], $startChar
-        );
-        while ($gotOne) {
-          //Found one.
-          //Flag to continue processing after this tag, so nested tags
-          //are processed.
-//          $foundCustomTag = TRUE;
-          //Flag to show whether there was a test option, and the tag
-          //failed the test.
-          $failedTestOption = FALSE;
-          //Error message for parsing of options, if it happens.
-          $optionsParseErrorMessage = '';
-          //Get tag's options. Options on the following lines until there's
-          // an MT line.
-          //Look from the end of the tag until find two LFs in a row - MT line.
-          //Accumulate chars until find it.
-          $tagEndPoint = $tagPos + strlen($openTagText);
-          $optionChars = '';
+    //Keep processing $source, until don't find custom tag.
+      $startChar = 0;
+      $openTagText = $tagType['tagName'] . ".";
+      //Name of method that processes the tag.
+      $methodName = $this->convertTagToMethodName($tagType['tagName']);
+      list($gotOne, $tagPos) = $this->findOpenTag(
+        $source, $tagType['tagName'], $startChar
+      );
+      while ($gotOne) {
+        //Found one.
+        //Flag to show whether there was a test option, and the tag
+        //failed the test.
+        $failedTestOption = FALSE;
+        //Error message for parsing of options, if it happens.
+        $optionsParseErrorMessage = '';
+        //Get tag's options. Options on the following lines until there's
+        // an MT line.
+        //Look from the end of the tag until find two LFs in a row - MT line.
+        //Accumulate chars until find it.
+        $tagEndPoint = $tagPos + strlen($openTagText);
+        $optionChars = '';
+        $next2Chars = substr($source, $tagEndPoint, 2);
+        while ($next2Chars !== "\n\n" && $tagEndPoint < strlen($source)) {
+          $optionChars .= substr($source, $tagEndPoint, 1);
+          $tagEndPoint++;
           $next2Chars = substr($source, $tagEndPoint, 2);
-          while ($next2Chars !== "\n\n" && $tagEndPoint < strlen($source)) {
-            $optionChars .= substr($source, $tagEndPoint, 1);
-            $tagEndPoint++;
-            $next2Chars = substr($source, $tagEndPoint, 2);
-          }
-          $options = [];
-          //Parse the options, if there are any.
-          $optionChars = trim($optionChars);
-          $optionsParseErrorMessage = '';
-          if (strlen($optionChars) > 0) {
-            //Try parsing tag params as YAML.
-            list($options, $optionsParseErrorMessage) = $this->parseParams(
-              $optionChars
-            );
-            //Is there no error, and a test?
-            if (
-                strlen($optionsParseErrorMessage) === 0
-                && isset($options[self::CONDITION_TEST_PARAM_NAME]) ) {
-              $context = [];
-              $expToEval = $options[self::CONDITION_TEST_PARAM_NAME];
-              //FALSE is a special case for exp lang to get right.
-              if ( $expToEval === FALSE ) {
-                $expToEval = 'false';
+        }
+        $options = [];
+        //Parse the options, if there are any.
+        $optionChars = trim($optionChars);
+        $optionsParseErrorMessage = '';
+        if (strlen($optionChars) > 0) {
+          //Try parsing tag params as YAML.
+          list($options, $optionsParseErrorMessage) = $this->parseParams(
+            $optionChars
+          );
+          //Is there no error, and a test?
+          if (
+              strlen($optionsParseErrorMessage) === 0
+              && isset($options[self::CONDITION_TEST_PARAM_NAME]) ) {
+            $context = [];
+            $expToEval = $options[self::CONDITION_TEST_PARAM_NAME];
+            //FALSE is a special case for exp lang to get right.
+            if ( $expToEval === FALSE ) {
+              $expToEval = 'false';
+            }
+            try {
+              //Eval the expression.
+              $result = $this->expressionLanguageService->evaluate(
+                $expToEval, $context
+              );
+              //Was is truthy?
+              if ( ! $result ) {
+                $failedTestOption = TRUE;
               }
-              try {
-                //Eval the expression.
-                $result = $this->expressionLanguageService->evaluate(
-                  $expToEval, $context
-                );
-                //Was is truthy?
-                if ( ! $result ) {
-                  $failedTestOption = TRUE;
-                }
-              } catch (\Exception $e) {
+            } catch (\Exception $e) {
 //              } catch (SyntaxError $e) {
-                $optionsParseErrorMessage = 'Error in expression: ' . $expToEval
-                 . ': ' . $e->getMessage();
-              }
-            }
-          } //End there are option chars.
-          //Find the close tag, if there is one, and the content between end
-          //of options, and close tag.
-          $tagContent = '';
-          if ($tagType['hasCloseTag']) {
-            $lookFor = $tagType['tagName'] . ".";
-            $openTagCount = 1;
-            //Where the content for the tag starts.
-            $contentStartPos = $tagEndPoint;
-            while ($openTagCount > 0) {
-              //Find the tag, either opening or closing.
-              $loc = stripos($source, $lookFor, $tagEndPoint);
-              //If didn't find anything, then missing end tag.
-              if ( $loc === FALSE ) {
-                return 'h2. Missing/invalid close tag? Missing . at end? Tag: '
-                  . $tagType['tagName'];
-              }
-              if (
-                    $this->isTagTextOnLineByItself(
-                      $source, $tagType['tagName'], $loc
-                    )
-              ) {
-                //Is it an opening or closing tag?
-                $priorChar = substr($source, $loc - 1, 1);
-                $isEndTag = ($priorChar == '/');
-                //Change open tag count
-                if ($isEndTag) {
-                  $openTagCount--;
-                }
-                else {
-                  $openTagCount++;
-                }
-                //Remember where the tag started, in case need it to extract
-                //content when the loop ends.
-                $contentEndPos = $loc;
-                if ($isEndTag) {
-                  $contentEndPos--;
-                }
-              }
-              //Move pointer past the tag just found.
-              $tagEndPoint = $loc + strlen($lookFor);
-            }
-            //Extract the content.
-            $tagContent = substr(
-              $source, $contentStartPos, $contentEndPos - $contentStartPos);
-            //Append parse error, if there was one.
-            if ( strlen($optionsParseErrorMessage) > 0 ) {
-              $tagContent .= "\n\np(" . self::OPTION_PARSING_ERROR_CLASS . '). '
-                . $optionsParseErrorMessage . "\n\n";
+              $optionsParseErrorMessage = 'Error in expression: ' . $expToEval
+               . ': ' . $e->getMessage();
             }
           }
-          //Process the tag.
-          $replacementContent = '';
-          //If test option failed, leave the replacement content MT.
-          if ( ! $failedTestOption ) {
-            $methodName
-              = 'process' . ucfirst(strtolower($tagType['tagName'])) . 'Tag';
-            if ( ! method_exists($this, $methodName) ) {
-              $replacementContent
-                = "\n\np(" . self::OPTION_PARSING_ERROR_CLASS . '). '
-                  . "Custom tag method missing: $methodName\n\n";
+        } //End there are option chars.
+        //Find the close tag, if there is one, and the content between end
+        //of options, and close tag.
+        $tagContent = '';
+        if ($tagType['hasCloseTag']) {
+          $lookFor = $tagType['tagName'] . ".";
+          $openTagCount = 1;
+          //Where the content for the tag starts.
+          $contentStartPos = $tagEndPoint;
+          while ($openTagCount > 0) {
+            //Find the tag, either opening or closing.
+            $loc = stripos($source, $lookFor, $tagEndPoint);
+            //If didn't find anything, then missing end tag.
+            if ( $loc === FALSE ) {
+              return 'h2. Missing/invalid close tag? Missing . at end? Tag: '
+                . $tagType['tagName'];
             }
-            else {
-              $replacementContent
-                = call_user_func([$this, $methodName], $tagContent, $options);
+            if (
+                  $this->isTagTextOnLineByItself(
+                    $source, $tagType['tagName'], $loc
+                  )
+            ) {
+              //Is it an opening or closing tag?
+              $priorChar = substr($source, $loc - 1, 1);
+              $isEndTag = ($priorChar == '/');
+              //Change open tag count
+              if ($isEndTag) {
+                $openTagCount--;
+              }
+              else {
+                $openTagCount++;
+              }
+              //Remember where the tag started, in case need it to extract
+              //content when the loop ends.
+              $contentEndPos = $loc;
+              if ($isEndTag) {
+                $contentEndPos--;
+              }
             }
+            //Move pointer past the tag just found.
+            $tagEndPoint = $loc + strlen($lookFor);
           }
-          //Replace tag.
-          $source = substr($source, 0, $tagPos) . $replacementContent
-            . substr($source, $tagEndPoint);
-          //Move back to the start, and look for another custom tag.
-          $startChar = 0;
-          list($gotOne, $tagPos)
-            = $this->findOpenTag($source, $tagType['tagName'], $startChar);
-        } //End while there are more tags of $tagType.
+          //Extract the content.
+          $tagContent = substr(
+            $source, $contentStartPos, $contentEndPos - $contentStartPos);
+          //Append parse error, if there was one.
+          if ( strlen($optionsParseErrorMessage) > 0 ) {
+            $tagContent .= "\n\np(" . self::OPTION_PARSING_ERROR_CLASS . '). '
+              . $optionsParseErrorMessage . "\n\n";
+          }
+        }
+        //Process the tag.
+        $replacementContent = '';
+        //If test option failed, leave the replacement content MT.
+        if ( ! $failedTestOption ) {
+          if ( ! method_exists($this, $methodName) ) {
+            $replacementContent
+              = "\n\np(" . self::OPTION_PARSING_ERROR_CLASS . '). '
+                . "Custom tag method missing: $methodName\n\n";
+          }
+          else {
+            $replacementContent
+              = call_user_func([$this, $methodName], $tagContent, $options);
+          }
+        }
+        //Replace tag.
+        $source = substr($source, 0, $tagPos) . $replacementContent
+          . substr($source, $tagEndPoint);
+        //Move back to the start, and look for another custom tag.
+        $startChar = 0;
+        list($gotOne, $tagPos)
+          = $this->findOpenTag($source, $tagType['tagName'], $startChar);
+      } //End while there are more tags of $tagType.
     }
     return $source;
 
@@ -393,6 +407,31 @@ class SkillCourseParser {
     return ! $foundNonWhiteSpaceChar;
   }
 
+  /**
+   * Compute the name of the processing method for a custom tag.
+   * @param string $tag Tag, e.g., show_one.
+   * @return string Method name.
+   */
+  protected function convertTagToMethodName($tag) {
+    $methodName = '';
+    $nextCharNum = 0;
+    $tagLen = strlen($tag);
+    while( $nextCharNum < $tagLen ) {
+      $char = $tag[$nextCharNum];
+      $nextCharNum++;
+      //Chars after _ become uppercase.
+      if ( $char === '_' ) {
+        if ( $nextCharNum < ($tagLen - 1) ) {
+          $methodName .= strtoupper($tag[$nextCharNum]);
+          $nextCharNum++;
+        }
+      }
+      else {
+        $methodName .= $char;
+      }
+    }
+    return 'process' . $methodName . 'Tag';
+  }
   /**
    * Parse text.
    *
