@@ -3,7 +3,7 @@
 namespace Drupal\hello;
 
 use Drupal\hello\Exception\SkillParserException;
-use Drupal\Core\Utility\Token;
+//use Drupal\Core\Utility\Token;
 use Netcarver\Textile\Parser as TextileParser;
 use Symfony\Component\Yaml\Exception\ParseException;
 //use Symfony\Component\ExpressionLanguage\SyntaxError;
@@ -26,7 +26,7 @@ class SkillCourseParser {
   /**
    * @var \Drupal\Core\Utility\Token
    */
-  protected $tokenService;
+//  protected $tokenService;
 
   /**
    * @var \Symfony\Component\DependencyInjection\ExpressionLanguage;
@@ -38,9 +38,23 @@ class SkillCourseParser {
    *
    * @param \Drupal\Core\Utility\Token $token
    */
-  public function __construct(Token $token) {
-    $this->tokenService = $token;
+  public function __construct() { //Token $token) {
+//    $this->tokenService = $token;
     $this->expressionLanguageService = new ExpressionLanguage();
+
+    $this->expressionLanguageService->register('expand',
+      function ($str) {
+        return ''; //sprintf('(is_string(%1$s) ? strtolower(%1$s) : %1$s)', $str);
+      },
+      function ($arguments, $str) {
+        if (!is_string($str)) {
+          return $str;
+        }
+        $arry = explode(',', $str);
+        return $arry;
+      }
+    );
+
     $this->addTagType('container', TRUE);
     $this->addTagType('exercise', FALSE);
     $this->addTagType('principle', FALSE);
@@ -49,6 +63,7 @@ class SkillCourseParser {
     $this->addTagType('show_one', FALSE);
     $this->addTagType('variable', FALSE);
     $this->addTagType('stop', TRUE);
+    $this->addTagType('rosie', TRUE);
 
   }
 
@@ -130,6 +145,14 @@ class SkillCourseParser {
 
   protected function processStopTag($content, $options) {
     $result = "\n " . $content . "\n\n";
+    return $result;
+  }
+
+  protected function processRosieTag($content, $options) {
+    //Default to one yap.
+    $numYaps = isset($options['yaps']) ? $options['yaps'] : 1;
+    $yaps = str_repeat('Yap ', $numYaps);
+    $result = "\n*$yaps!*\n\n" . $content . "$yaps!\n\n";
     return $result;
   }
 
@@ -309,11 +332,11 @@ class SkillCourseParser {
       $options = $options['default'];
     }
     //Replace tokens.
-    foreach($options as $indx=>$val) {
-      //Todo: what happens for invalid token?
-      $newVal = $this->tokenService->replace($val);
-      $options[$indx] = $newVal;
-    }
+//    foreach($options as $indx=>$val) {
+//      //Todo: what happens for invalid token?
+//      $newVal = $this->tokenService->replace($val);
+//      $options[$indx] = $newVal;
+//    }
     return [ $options, '' ];
   }
 
@@ -442,10 +465,10 @@ class SkillCourseParser {
     //Trim whitespace. Authors can use indentation as they want, but it
     //will mess up Textile.
     $source = $this->trimWhitespace($source);
+    //Replace tokens in source.
+//    $source = $this->tokenService->replace($source);
     //Parse custom tags.
     $source = $this->parseCustomTags($source);
-    //Replace tokens in source.
-    $source = $this->tokenService->replace($source);
     //Textile time.
     $textileParser = new TextileParser('html5');
     $textileParser

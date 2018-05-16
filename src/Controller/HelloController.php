@@ -391,4 +391,39 @@ t = not 6
       '#markup' => $this->t('Exp2:' . $msg)
     ];
   }
+  
+  public function js1() {
+    $sessionId = \Drupal::service('session')->getId();
+    $csrfToken = \Drupal::service('csrf_token')->get();
+    $build['js1'] = [
+      '#attached' => [
+        'library' => 'hello/js1',
+        'drupalSettings' => [
+          'best' => 'Rosie',
+          'sessionId' => $sessionId,
+          'csrfToken' => $csrfToken,
+        ]
+      ]
+    ];
+    $build['messages'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['silly'],'id' => 'message-wrapper'],
+      'dog' => [
+        '#type' => 'markup',
+        '#markup' => 'Dogs are best!',
+        '#prefix' => 'Woof',
+        ]
+    ];
+
+    $build['dog'] = [
+      '#type' => 'markup',
+      '#markup' => 'Dogs are the bestest4!',
+//      '#id' => 'dogg',
+      '#attributes' => array('class' => ['silly'],),
+      '#prefix' => 'Woof',
+      '#suffix' => 'bark',
+    ];
+    return $build;
+
+  }
 }

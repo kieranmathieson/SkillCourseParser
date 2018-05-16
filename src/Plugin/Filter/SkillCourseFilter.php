@@ -140,9 +140,9 @@ class SkillCourseFilter extends FilterBase {
     );
 
     $text = html_entity_decode($text);
-    $tokenService = \Drupal::service('token');
+//    $tokenService = \Drupal::service('token');
 //    $expressionLanguage = new ExpressionLanguage();
-    $parser = new SkillCourseParser($tokenService);
+    $parser = new SkillCourseParser(); //$tokenService);
 //    $parser = new SkillCourseParser($tokenService, $expressionLanguage);
 //    $parserService = \Drupal::service('hello.skillcourseparser');
     $result = $parser->parse($text);

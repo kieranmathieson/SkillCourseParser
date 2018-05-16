@@ -109,3 +109,10 @@ hello.exp2:
     _title: 'Exp stuff'
   requirements:
     _permission: 'access content'
+hello.js1:
+  path: '/js1'
+  defaults:
+    _controller: '\Drupal\hello\Controller\HelloController::js1'
+    _title: 'Js1'
+  requirements:
+    _permission: 'access content'

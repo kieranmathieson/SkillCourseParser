@@ -4,3 +4,11 @@ hello-styles:
     theme:
         hello.theme.css: {}
         css/display.css: {}
+js1:
+  version: 1.x
+  js:
+    jstest/js1/js1.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/jquery.once

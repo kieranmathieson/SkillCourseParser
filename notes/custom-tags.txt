@@ -1,0 +1,176 @@
+Custom Tags
+===========
+
+
+Standard options
+----------------
+
+Options that are
+
+
+
+
+All have optional condition option, boolean, show
+content when true.
+
+All tags have an id, to use to refer to them elsewhere.
+
+
+
+
+container.
+
+Closing tag: yes
+
+Container for content. Typically used to you want to use
+a display condition, without any other aspects.
+
+
+
+exercise.
+
+Closing tag: no
+
+Shows a specific exercise. Not used to show exercises from a
+class.
+
+Required option: internal_name: name of exercise to show.
+
+
+
+
+
+warning.
+
+Closing tag: yes
+
+Warning to reader.
+
+
+
+show_one.
+
+Closing tag: no.
+
+Show the item for the first condition that is met.
+Overrides item's own condition.
+
+sports.condition: students.field_interests includes sports
+sports.id: sports_exercise
+social_media.condition: students.field_interests includes social_media
+social_media.id: social_media_exercise
+
+
+container.
+    id: sports_exercise
+    condition: student.completed.exercise_hockey_mania
+
+    OK, sports fans! Time to hit the ice!
+
+    exercise.
+        internal_name: exercise_hockey_mania
+
+/container.
+
+The container will always be shown if the student has completed
+exercise_hockey_mania. So, if the student changes his/her
+interests, deselecting sports, the exercise will
+be shown anyway, if the student completed it.
+
+A shorter way, without the extra flavor text in a container:
+
+exercise.
+    id: sports_exercise
+    condition: student.completed.exercise_hockey_mania
+
+Show multiple exercises, matching all interests.
+
+exercise.
+    condition: students.field_interests includes sports
+
+exercise.
+    condition: students.field_interests includes social_media
+
+
+
+
+
+show_exercises_in_class.
+
+Closing tag: no
+
+Show all of the exercises in a class, sorted by weight.
+
+
+
+
+
+stop.
+
+Closing tag: yes.
+
+Stop page if condition is true.
+
+Content is message to show if condition is true.
+
+
+
+principle.
+
+Closing tag: no
+
+internal_name: required
+
+
+
+variable.
+    name:
+    value:
+
+
+
+
+
+
+Conditions
+==========
+
+Student attribute
+
+Completed exercises from class - number
+
+Submitted exercises from class - number
+
+Completed specific exercise - boolean
+
+Submitted specific exercise from class - boolean
+
+Past point defined in calendar.
+    This allows for different calendars to use different
+    dates.
+
+Before data defined in calendar.
+
+On date defined in calendar.
+
+Number of completed exercises.
+
+
+
+
+
+
+Variables
+=========
+
+Global variables section that is included for every page.
+Used, e.g., progress student has made:
+
+see_basic_js: exercise_class_completed.basic_html > 3 and
+              exercise_class_completed.advanced_html > 3
+
+see_advanced_js: see_basic_js and
+exercise_class_completed.basic_js > 3
+
+Use this to stop seeing advanced JS lesson.
+
